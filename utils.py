@@ -109,6 +109,11 @@ def calc_intervals(ints_n, length):
             strt=stp
     return r
 
+def calc_fig_size(pic_ratio, multiplier=2):
+    width=10*multiplier
+    height=pic_ratio*multiplier*10
+    return (width, height)    
+
 def generate_colors(df, c_map, condition):
     c=[]
     for k, s in df.items():
