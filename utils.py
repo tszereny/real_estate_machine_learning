@@ -192,3 +192,23 @@ def plot_scatter_matrix(df, fs=15):
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].yaxis.set_visible(False)
             plt.subplots_adjust(wspace=0, hspace=0)
+
+def plot_scatter_map(x, y, figsize, xlabel=None, ylabel=None, epsg_code=4326, dpi=160):
+    m = Basemap(urcrnrlat=y.max(),     # top
+              urcrnrlon=x.max(),   # bottom
+              llcrnrlat=y.min(),     # left
+              llcrnrlon=x.min(),   # right
+              epsg=epsg_code)
+    width = figsize[0]
+    height = figsize[1]
+    fig = plt.gcf()
+    fig.set_size_inches(width, height)
+    dpi = dpi
+    xpixels = dpi * width
+    m.arcgisimage(service='Canvas/World_Light_Gray_Base', xpixels=xpixels)
+    plt.scatter(x=x, y=y, s=25, alpha=1, linewidth=0.25, edgecolor='Black')
+    plt.xticks(np.linspace(start=x.min(), stop=x.max(), num=np.ceil(width/2).astype(int)).round(2), fontsize=15)
+    plt.yticks(np.linspace(start=y.min(), stop=y.max(), num=np.ceil(height/2).astype(int)).round(2), fontsize=15)
+    plt.xlabel(x.name if xlabel is None else xlabel, fontsize=20)
+    plt.ylabel(y.name if ylabel is None else ylabel, fontsize=20)
+    plt.show()
