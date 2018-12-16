@@ -1,5 +1,6 @@
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap 
 import string, json
 from zlib import crc32
 import sys
@@ -193,7 +194,7 @@ def plot_scatter_matrix(df, fs=15):
                 axs[r,c].yaxis.set_visible(False)
             plt.subplots_adjust(wspace=0, hspace=0)
 
-def plot_scatter_map(x, y, figsize, xlabel=None, ylabel=None, epsg_code=4326, dpi=160):
+def plot_scatter_map(figsize, x, y, c=None, colormap=None, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160):
     m = Basemap(urcrnrlat=y.max(),     # top
               urcrnrlon=x.max(),   # bottom
               llcrnrlat=y.min(),     # left
@@ -206,9 +207,38 @@ def plot_scatter_map(x, y, figsize, xlabel=None, ylabel=None, epsg_code=4326, dp
     dpi = dpi
     xpixels = dpi * width
     m.arcgisimage(service='Canvas/World_Light_Gray_Base', xpixels=xpixels)
-    plt.scatter(x=x, y=y, s=25, alpha=1, linewidth=0.25, edgecolor='Black')
+    plt.scatter(x=x, y=y, c=c, cmap=colormap, s=s, alpha=alpha, linewidth=linewidth, edgecolor='Black')
     plt.xticks(np.linspace(start=x.min(), stop=x.max(), num=np.ceil(width/2).astype(int)).round(2), fontsize=15)
     plt.yticks(np.linspace(start=y.min(), stop=y.max(), num=np.ceil(height/2).astype(int)).round(2), fontsize=15)
     plt.xlabel(x.name if xlabel is None else xlabel, fontsize=20)
     plt.ylabel(y.name if ylabel is None else ylabel, fontsize=20)
+    if c is not None:
+        cbar = plt.colorbar(orientation='vertical', shrink=c_bar_shrink)
+        cbar.set_label(c.name if clabel is None else clabel, rotation=90, fontsize=20)
+        cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontsize=15)
     plt.show()
+    
+def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
+    fig, axs = plt.subplots(2,2)
+    fig.set_size_inches(20,20)
+    df.plot(kind='scatter', x=x, y=y, ax=axs[1,0], s=25, alpha=0.4, linewidth=0.25, edgecolor='Black', fontsize=fs)
+    df.hist(x, ax=axs[0,0], bins=bins, linewidth=0.5, edgecolor='Black', grid=False, sharey=True, xlabelsize=fs, ylabelsize=fs, label=None)
+    df.hist(y, ax=axs[1,1], bins=bins, linewidth=0.5, edgecolor='Black', grid=False, orientation='horizontal', sharex=True, xlabelsize=fs, ylabelsize=fs)
+    axs[0,1].axis('off')
+    axs[0,0].xaxis.set_ticks([])
+    axs[1,1].yaxis.set_ticks([])
+    axs[1,0].set_xlabel(x if xlabel is None else xlabel, fontsize=20)
+    axs[1,0].set_ylabel(y if ylabel is None else ylabel, fontsize=20)
+    axs[0,0].set_title('')
+    axs[1,1].set_title('')
+    plt.tight_layout(w_pad=-2, h_pad=-1.5)
+    plt.show()
+
+def plot_outliers(st_df, n_std=6, figsize=(30,10)):
+    n_cols=len(st_df.columns)
+    fig, axs = plt.subplots(1, n_cols, figsize=figsize)
+    for ax, k in zip(axs, st_df):
+        ax.scatter(range(len(st_df[k])), st_df[k], marker='o', s=10)
+        ax.set_title(k, fontdict={'fontsize':20})
+        for std in range(-n_std, n_std+1):
+            ax.axhline(std, c='r')
