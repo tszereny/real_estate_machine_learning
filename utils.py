@@ -216,7 +216,7 @@ def plot_scatter_map(figsize, x, y, c=None, colormap=None, c_bar_shrink=1, xlabe
         cbar = plt.colorbar(orientation='vertical', shrink=c_bar_shrink)
         cbar.set_label(c.name if clabel is None else clabel, rotation=90, fontsize=20)
         cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontsize=15)
-    plt.show()
+    return plt.gcf(), plt.gca()
     
 def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
     fig, axs = plt.subplots(2,2)
@@ -234,6 +234,20 @@ def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
     plt.tight_layout(w_pad=-2, h_pad=-1.5)
     plt.show()
 
+def plot_sca_stackedhist(df, x, y, category, colors):
+    df_by_categories=[df.loc[df[category]==cat_cond, [x, y, category]] for cat_cond in df[category].drop_duplicates()]
+    x_by_cats=[df[x].values for df in df_by_categories]
+    y_by_cats=[df[y].values for df in df_by_categories]
+    fig, axs = plt.subplots(2,2)
+    fig.set_size_inches(20,20)
+    for x, y, c in zip(x_by_cats, y_by_cats, colors):
+        axs[1,0].scatter(x=x, y=y, color=c, linewidth=0.25, edgecolor='Black', alpha=0.5)
+    axs[0,0].hist(x_by_cats, color=colors, histtype='barstacked', bins=80, linewidth=0.3, edgecolor='Black')
+    axs[1,1].hist(y_by_cats, color=colors, histtype='barstacked', bins=80, orientation='horizontal', linewidth=0.3, edgecolor='Black')
+    axs[0,1].axis('off')
+    plt.tight_layout()
+    plt.show()    
+    
 def plot_outliers(st_df, n_std=6, figsize=(30,10)):
     n_cols=len(st_df.columns)
     fig, axs = plt.subplots(1, n_cols, figsize=figsize)
