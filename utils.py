@@ -140,6 +140,7 @@ def plot_na_ratio(df, grouping, subplot_n=2,  dest_dir='.'):
         ax_df.plot(kind='bar', figsize=(17,15), legend=True, ax=axs[i])
         axs[i].set_xticklabels(ax_df.index.tolist(), fontsize=14)
     fig.savefig('{0}/{1}.png'.format(dest_dir, title))
+    return fig, axs
     
     
 def plot_scatter_matrix(df, fs=15):
@@ -193,6 +194,7 @@ def plot_scatter_matrix(df, fs=15):
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].yaxis.set_visible(False)
             plt.subplots_adjust(wspace=0, hspace=0)
+    return fig, axs
 
 def plot_scatter_map(figsize, x, y, c=None, colormap=None, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160):
     m = Basemap(urcrnrlat=y.max(),     # top
@@ -232,7 +234,7 @@ def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
     axs[0,0].set_title('')
     axs[1,1].set_title('')
     plt.tight_layout(w_pad=-2, h_pad=-1.5)
-    plt.show()
+    return fig, axs
 
 def plot_sca_stackedhist(df, x, y, category, colors):
     df_by_categories=[df.loc[df[category]==cat_cond, [x, y, category]] for cat_cond in df[category].drop_duplicates()]
@@ -246,7 +248,7 @@ def plot_sca_stackedhist(df, x, y, category, colors):
     axs[1,1].hist(y_by_cats, color=colors, histtype='barstacked', bins=80, orientation='horizontal', linewidth=0.3, edgecolor='Black')
     axs[0,1].axis('off')
     plt.tight_layout()
-    plt.show()    
+    return fig, axs    
     
 def plot_outliers(st_df, n_std=6, figsize=(30,10)):
     n_cols=len(st_df.columns)
@@ -256,3 +258,4 @@ def plot_outliers(st_df, n_std=6, figsize=(30,10)):
         ax.set_title(k, fontdict={'fontsize':20})
         for std in range(-n_std, n_std+1):
             ax.axhline(std, c='r')
+    return fig, axs
