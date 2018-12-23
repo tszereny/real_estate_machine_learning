@@ -93,7 +93,7 @@ def load_json(json_path, encoding='utf8'):
         data=json.load(f)
     return data
     
-def load_danube_gps_coordinates(json_path):
+def load_geoson_gps_coordinates(json_path):
     geojson=load_json(json_path)
     return parse_geojson(geojson)
     
@@ -237,14 +237,21 @@ def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
     return fig, axs
 
 def plot_sca_stackedhist(df, x, y, category, colors):
+    FACE_C='lightgrey'
     df_by_categories=[df.loc[df[category]==cat_cond, [x, y, category]] for cat_cond in df[category].drop_duplicates()]
     x_by_cats=[df[x].values for df in df_by_categories]
     y_by_cats=[df[y].values for df in df_by_categories]
     fig, axs = plt.subplots(2,2)
     fig.set_size_inches(20,20)
+    axs[1,0].set_facecolor(FACE_C)
+    axs[1,0].grid(True)
     for x, y, c in zip(x_by_cats, y_by_cats, colors):
         axs[1,0].scatter(x=x, y=y, color=c, linewidth=0.25, edgecolor='Black', alpha=0.5)
+    axs[0,0].set_facecolor(FACE_C)
+    axs[0,0].grid(True)
     axs[0,0].hist(x_by_cats, color=colors, histtype='barstacked', bins=80, linewidth=0.3, edgecolor='Black')
+    axs[1,1].set_facecolor(FACE_C)
+    axs[1,1].grid(True)
     axs[1,1].hist(y_by_cats, color=colors, histtype='barstacked', bins=80, orientation='horizontal', linewidth=0.3, edgecolor='Black')
     axs[0,1].axis('off')
     plt.tight_layout()
