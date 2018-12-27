@@ -6,7 +6,7 @@ import string
 import json
 import urllib
 from zlib import crc32
-import sys
+import sys, os
 import urllib
 REAL_ESTATE_HUN_DIR='../real_estate_hungary/'
 sys.path.append(REAL_ESTATE_HUN_DIR)
@@ -127,6 +127,13 @@ def load_geoson_gps_coordinates(json_path):
     geojson=load_json(json_path)
     return parse_geojson(geojson)
 
+def retreive_gps_overpass(overpass_query):
+    overpass_api = overpy.Overpass()
+    result = overpass_api.query(overpass_query)
+    nodes = [(n.id, float(n.lat), float(n.lon)) for n in result.nodes]
+    df = pd.DataFrame(nodes, columns=['id', 'lat', 'lng'])
+    return df
+    
 def query_osm(q):
     overpass_api = overpy.Overpass()
     result = overpass_api.query(q)
@@ -267,7 +274,7 @@ def plot_scatter_matrix(df, fs=15):
             plt.subplots_adjust(wspace=0, hspace=0)
     return fig, axs
 
-def plot_scatter_map(figsize, x, y, c=None, colormap=None, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160):
+def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160):
     m = Basemap(urcrnrlat=y.max(),     # top
               urcrnrlon=x.max(),   # bottom
               llcrnrlat=y.min(),     # left
@@ -285,7 +292,7 @@ def plot_scatter_map(figsize, x, y, c=None, colormap=None, c_bar_shrink=1, xlabe
     plt.yticks(np.linspace(start=y.min(), stop=y.max(), num=np.ceil(height/2).astype(int)).round(2), fontsize=15)
     plt.xlabel(x.name if xlabel is None else xlabel, fontsize=20)
     plt.ylabel(y.name if ylabel is None else ylabel, fontsize=20)
-    if c is not None:
+    if c is not None and cbar:
         cbar = plt.colorbar(orientation='vertical', shrink=c_bar_shrink)
         cbar.set_label(c.name if clabel is None else clabel, rotation=90, fontsize=20)
         cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontsize=15)
