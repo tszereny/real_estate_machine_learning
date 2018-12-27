@@ -1,13 +1,43 @@
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap 
-import string, json
+from mpl_toolkits.basemap import Basemap
+import overpy
+import string
+import json
+import urllib
 from zlib import crc32
 import sys
 import urllib
 REAL_ESTATE_HUN_DIR='../real_estate_hungary/'
 sys.path.append(REAL_ESTATE_HUN_DIR)
 from real_estate_hungary import RequestWithHeaders
+
+class Elevation:
+    
+    def __init__(self, df, latitude, longitude):
+        self.HEADERS={'content-type': 'application/json', 'accept': 'application/json'}
+        self.API = 'https://api.open-elevation.com/api/v1/lookup'
+        self.df = df
+        self.latitude = latitude
+        self.longitude = longitude
+    
+    @property
+    def locations_params(self):
+        params = {'locations':[{'latitude': r[self.latitude], 'longitude': r[self.longitude]} for i, r in self.df[[self.latitude, self.longitude]].iterrows()]}
+        return params
+    
+    @property
+    def json_params(self):
+        params_json = json.dumps(self.locations_params).encode('utf8')
+        return params_json
+    
+    def retrieve_to_df(self, timeout=200):
+        req = urllib.request.Request(url=self.API, method='POST', data=self.json_params, headers=self.HEADERS)
+        response_stream = urllib.request.urlopen(req, timeout=timeout)
+        response = response_stream.read()
+        response_stream.close()
+        parsed_response = json.loads(response.decode('utf8'))
+        return pd.DataFrame(parsed_response['results'])
 
 def generate_na(df, na_eq):
     gen_na=lambda x: None if x==na_eq else x
@@ -96,6 +126,47 @@ def load_json(json_path, encoding='utf8'):
 def load_geoson_gps_coordinates(json_path):
     geojson=load_json(json_path)
     return parse_geojson(geojson)
+
+def query_osm(q):
+    overpass_api = overpy.Overpass()
+    result = overpass_api.query(q)
+    return result
+
+def osm_result_to_df(result, add_tag=None):
+    r=[]
+    for rel in result.relations:
+        if add_tag:
+            col_val=[rel.tags[add_tag]]
+            column_names=['id', 'lat', 'lng']+[add_tag]
+        else:
+            col_val=[]
+            column_names=['id', 'lat', 'lng']
+        for m in rel.members:
+            if isinstance(m, overpy.RelationWay):
+                w=m.resolve()
+                for n in w.nodes:
+                    rw=[n.id, float(n.lat), float(n.lon)]+col_val
+                    r.append(rw)
+            elif isinstance(m, overpy.RelationNode):
+                rw=[n.id, float(n.lat), float(n.lon)]+col_val
+                r.append(rw)
+    df=pd.DataFrame(r, columns=column_names).drop_duplicates()
+    return df
+
+def osm_to_df(q, add_tag=None):
+    result = query_osm(q)
+    df = osm_result_to_df(result, add_tag)
+    return df
+
+def check_n_query_osm(file_p, query_p, add_tag=None, saving=True):
+    if not os.path.exists(file_p):
+        with open(query_p, encoding='utf8') as  f:
+            osm_query=f.read()
+        df = osm_to_df(osm_query, add_tag=add_tag)
+        if saving: df.to_csv(file_p, index=False, encoding='utf8')
+    else:
+        df = pd.read_csv(file_p, encoding='utf8')
+    return df
     
 def calc_intervals(ints_n, length):
     r=[]
