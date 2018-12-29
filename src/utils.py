@@ -1,9 +1,11 @@
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.mplot3d import Axes3D
 import overpy
-import string
+import string, pickle
 import json
+import smtplib, ssl, getpass
 import urllib
 from zlib import crc32
 import sys, os
@@ -11,6 +13,21 @@ import urllib
 REAL_ESTATE_HUN_DIR='../real_estate_hungary/'
 sys.path.append(REAL_ESTATE_HUN_DIR)
 from real_estate_hungary import RequestWithHeaders
+
+class Email:
+    
+    def __init__(self, sender_email, receiver_email, port = 465, smtp_server = 'smtp.gmail.com'):
+        self.sender_email = sender_email
+        self.receiver_email = receiver_email
+        self.port = port
+        self.smtp_server = smtp_server
+        self.context = ssl.create_default_context()
+        self._password = getpass.getpass('Type your password and press enter: ')
+        
+    def send(self, msg):
+        with smtplib.SMTP_SSL(self.smtp_server, self.port, context=self.context) as server:
+            server.login(self.sender_email, self._password)
+            server.sendmail(self.sender_email, self.receiver_email, msg)
 
 class Elevation:
     
@@ -38,7 +55,17 @@ class Elevation:
         response_stream.close()
         parsed_response = json.loads(response.decode('utf8'))
         return pd.DataFrame(parsed_response['results'])
+        
+def save_pkl(pkl_path, obj):
+    with open(pkl_path, 'wb') as f:  
+        pickle.dump(obj, f)
+    return pkl_path
 
+def load_pkl(pkl_path):
+    with open(pkl_path, 'rb') as f:  
+        obj = pickle.load(f)
+    return obj
+    
 def generate_na(df, na_eq):
     gen_na=lambda x: None if x==na_eq else x
     if isinstance(df, pd.Series):
@@ -174,7 +201,7 @@ def check_n_query_osm(file_p, query_p, add_tag=None, saving=True):
     else:
         df = pd.read_csv(file_p, encoding='utf8')
     return df
-    
+
 def calc_intervals(ints_n, length):
     r=[]
     strt=0
@@ -344,3 +371,24 @@ def plot_outliers(st_df, n_std=6, figsize=(30,10)):
         for std in range(-n_std, n_std+1):
             ax.axhline(std, c='r')
     return fig, axs
+
+def create_grid(x_min, x_max, y_min, y_max, data_points, model, x_first_feature=True):
+    X, Y=np.meshgrid(np.linspace(x_min, x_max, data_points),
+                         np.linspace(y_min, y_max, data_points))
+    Z=np.ones((data_points,data_points))
+    for i in range(0, data_points):
+        if x_first_feature:
+            Z[i] = model.predict(X=np.stack([X[i], Y[i]], axis=1))
+        else:
+            Z[i] = model.predict(X=np.stack([Y[i], X[i]], axis=1))
+    return X, Y, Z
+
+def plot_3d_surface(X, Y, Z, elevation=50, rotation=45, figsize=(15,15), saving=False, dir_name=None, model_name=None):
+    fig = plt.figure(figsize=(15,15))
+    ax = fig.gca(projection='3d')
+    ax.plot_surface(X=X, Y=Y, Z=Z, cmap="coolwarm")
+    ax.view_init(elevation, rotation)
+    if saving and model_name and dir_name:
+        fn='model_{0}_elev_{1}_rotat_{2}.png'.format(model_name, elevation, rotation)
+        fig.savefig(os.path.join(dir_name, fn))
+    return fig, ax
