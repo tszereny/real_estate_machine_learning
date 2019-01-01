@@ -10,7 +10,8 @@ import urllib
 from zlib import crc32
 import sys, os
 import urllib
-REAL_ESTATE_HUN_DIR='../real_estate_hungary/'
+REPO_DIR = os.path.join(os.environ['USERPROFILE'], 'repos')
+REAL_ESTATE_HUN_DIR=os.path.join(REPO_DIR, 'real_estate_hungary')
 sys.path.append(REAL_ESTATE_HUN_DIR)
 from real_estate_hungary import RequestWithHeaders
 
