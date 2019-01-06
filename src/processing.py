@@ -1,4 +1,6 @@
-import pandas as pd
+import pandas as pd, numpy as np
+import string
+from zlib import crc32
 
 def generate_na(df, na_eq):
     gen_na=lambda x: None if x==na_eq else x
@@ -45,3 +47,36 @@ def transform_naming(df):
     df.desc=generate_na(df.desc, na_eq='|   |')
     df=translate_listing_type(df)
     return df
+
+def multiply(func, **kwargs):
+    def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None):
+        if thousand_eq==million_eq==billion_eq==None:
+            multiplier = 1
+        elif billion_eq in from_string:
+            multiplier = 1e9
+        elif million_eq in from_string:
+            multiplier = 1e6
+        elif thousand_eq in from_string:
+            multiplier = 1e3
+        else:
+            multiplier = 1
+        return func(from_string, **kwargs) * multiplier
+    return func_wrapper
+
+@multiply
+def extract_num(from_string, decimal_sep='.'):
+    ''' Extract all numeric values from string '''
+    res=[s for s in from_string if s in string.digits or s==decimal_sep]
+    num_s=''.join(res).replace(decimal_sep, '.')
+    return float(num_s)
+    
+def test_set_check(identifier, test_ratio):
+    if isinstance(identifier, str):
+        return crc32(identifier.encode('ascii')) / 0xffffffff < test_ratio
+    else:
+        return crc32(np.int64(identifier)) / 0xffffffff < test_ratio
+
+def split_train_test_by_hash(df, test_ratio, id_column):
+    ids = df[id_column]
+    in_test_set = ids.apply(lambda id_: test_set_check(id_, test_ratio))
+    return df.loc[~in_test_set], df.loc[in_test_set]
