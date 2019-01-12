@@ -1,34 +1,67 @@
 import pandas as pd, numpy as np
 import urllib, json
+from urllib.request import HTTPDefaultErrorHandler, HTTPError, URLError
+from http.client import RemoteDisconnected
 import overpy
-from src.utils import read_txt
+from src.utils import read_txt, calc_intervals
 
 class Elevation:
     
-    def __init__(self, df, latitude, longitude):
+    def __init__(self, df, latitude, longitude, batch_size = None):
         self.HEADERS={'content-type': 'application/json', 'accept': 'application/json'}
         self.API = 'https://api.open-elevation.com/api/v1/lookup'
-        self.df = df
+        self._df = df
         self.latitude = latitude
         self.longitude = longitude
+        self.batch_size = len(self._df) if batch_size is None else batch_size
+        self.dfs = [df[interval.start:interval.stop] for interval in self.batch_intervals]
     
     @property
+    def n_batches(self):
+        n_batches = int(np.ceil(len(self._df)/self.batch_size))
+        return n_batches
+    
+    @property
+    def batch_intervals(self):
+        intervals = calc_intervals(self.n_batches, len(self._df)) if self.n_batches > 1 else [range(0, len(self._df))]
+        return intervals
+        
+    @property
     def locations_params(self):
-        params = {'locations':[{'latitude': r[self.latitude], 'longitude': r[self.longitude]} for i, r in self.df[[self.latitude, self.longitude]].iterrows()]}
+        params = [{'locations':[{'latitude': r[self.latitude], 'longitude': r[self.longitude]} for i, r in df[[self.latitude, self.longitude]].iterrows()]} for df in self.dfs]
         return params
     
     @property
     def json_params(self):
-        params_json = json.dumps(self.locations_params).encode('utf8')
+        params_json = [json.dumps(lp).encode('utf8') for lp in self.locations_params]
         return params_json
-    
-    def retrieve_to_df(self, timeout=200):
-        req = urllib.request.Request(url=self.API, method='POST', data=self.json_params, headers=self.HEADERS)
+        
+    def _retrieve_to_df(self, timeout=200, batch_idx=0):
+        req = urllib.request.Request(url=self.API, method='POST', data=self.json_params[batch_idx], headers=self.HEADERS)
         response_stream = urllib.request.urlopen(req, timeout=timeout)
         response = response_stream.read()
         response_stream.close()
         parsed_response = json.loads(response.decode('utf8'))
         return pd.DataFrame(parsed_response['results'])
+    
+    def retrieve_to_df(self):
+        result = pd.DataFrame()
+        for b in range(self.n_batches):
+            while True:
+                batch = None
+                try:
+                    batch = self._retrieve_to_df(batch_idx=b)
+                    print('{}. success - batch retrieved!'. format(b + 1))
+                except HTTPError as err:
+                    pass
+                except URLError as err:
+                    pass
+                except RemoteDisconnected as err:
+                    pass
+                if batch is not None:
+                    break
+            result = pd.concat([result, batch], axis=0)
+        return result.reset_index(drop = True)
 
 class OSM:
 
