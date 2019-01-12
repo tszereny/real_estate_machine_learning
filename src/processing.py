@@ -29,7 +29,7 @@ def rename_cols_to_eng(df):
     'kertkapcsolatos':'with_entry_to_garden', 'kilátás':'view','kisállat':'pets', 'komfort':'convenience_level',
     'költözhető':'vacant', 'lakópark_neve':'residental_park_name','légkondicionáló': 'air_conditioned',
     'metró':'metro_lines', 'metró_count':'metro_lines_count', 'min._bérleti_idő': 'min_tenancy','parkolás':'parking',
-    'parkolóhely_ára': 'parking_lot_price_in_huf','rezsiköltség':'utilities','tetőtér':'attic',
+    'parkolóhely_ára': 'parking_lot_price','rezsiköltség':'utilities','tetőtér':'attic',
     'troli':'trolley_buses', 'troli_count':'trolley_buses_count','tájolás':'orientation',
     'villamos':'trams','villamos_count':'trams_count','éjszakai':'all_night_services',
     'éjszakai_count':'all_night_services_count','építés_éve': 'year_built','épület_szintjei':'building_floors'}
@@ -49,15 +49,14 @@ def transform_naming(df):
     return df
 
 def multiply(func, **kwargs):
-    def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None):
-        if thousand_eq==million_eq==billion_eq==None:
-            multiplier = 1
-        elif billion_eq in from_string:
-            multiplier = 1e9
-        elif million_eq in from_string:
-            multiplier = 1e6
-        elif thousand_eq in from_string:
-            multiplier = 1e3
+    def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None, thousand_mlpr = 1e3, million_mlpr = 1e6, billion_mlpr = 1e9):
+        from_string = str(from_string)
+        if billion_eq and billion_eq in from_string:
+            multiplier = billion_mlpr
+        elif million_eq and million_eq in from_string:
+            multiplier = million_mlpr
+        elif thousand_eq and thousand_eq in from_string:
+            multiplier = thousand_mlpr
         else:
             multiplier = 1
         return func(from_string, **kwargs) * multiplier
