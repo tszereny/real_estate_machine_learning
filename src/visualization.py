@@ -114,10 +114,10 @@ def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, c_bar_shri
         cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontsize=15)
     return plt.gcf(), plt.gca()
     
-def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15):
+def plot_sca_hist(df, x, y, bins, xlabel=None, ylabel=None, fs=15, alpha = 0.4):
     fig, axs = plt.subplots(2,2)
     fig.set_size_inches(20,20)
-    df.plot(kind='scatter', x=x, y=y, ax=axs[1,0], s=25, alpha=0.4, linewidth=0.25, edgecolor='Black', fontsize=fs)
+    df.plot(kind='scatter', x=x, y=y, ax=axs[1,0], s=25, alpha=alpha, linewidth=0.25, edgecolor='Black', fontsize=fs)
     df.hist(x, ax=axs[0,0], bins=bins, linewidth=0.5, edgecolor='Black', grid=False, sharey=True, xlabelsize=fs, ylabelsize=fs, label=None)
     df.hist(y, ax=axs[1,1], bins=bins, linewidth=0.5, edgecolor='Black', grid=False, orientation='horizontal', sharex=True, xlabelsize=fs, ylabelsize=fs)
     axs[0,1].axis('off')
