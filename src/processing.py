@@ -79,3 +79,24 @@ def split_train_test_by_hash(df, test_ratio, id_column):
     ids = df[id_column]
     in_test_set = ids.apply(lambda id_: test_set_check(id_, test_ratio))
     return df.loc[~in_test_set], df.loc[in_test_set]
+
+def calc_outlier_ratio(st_df, columns, n_sigma = 10, sigma_step = 0.25):
+    total_records = len(st_df)
+    ratios = []
+    for sigma in np.arange(n_sigma, 1, -sigma_step):
+        all_mask = np.array([True] * total_records)
+        for c in columns:
+            mask = (st_df[c].values <= sigma) & (st_df[c].values >= sigma * (-1))
+            all_mask = all_mask & mask
+        filtered_records = len(st_df[all_mask])
+        ratio = 1 - (filtered_records/total_records)
+        ratios.append(ratio*100)
+    return np.c_[np.arange(n_sigma, 1, -sigma_step), np.array(ratios)]    
+    
+def create_outlier_mask(st_df, columns, sigma_threshold = 3):
+    total_records = len(st_df)
+    outlier_mask = np.array([True] * total_records)
+    for c in columns:
+        mask = (st_df[c].values <= sigma_threshold) & (st_df[c].values >= sigma_threshold * (-1))
+        outlier_mask = outlier_mask & mask
+    return outlier_mask
