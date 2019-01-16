@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import smtplib, ssl, getpass
+import pickle
 
 class Email:
     
