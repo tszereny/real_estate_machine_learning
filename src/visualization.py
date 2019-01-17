@@ -1,7 +1,10 @@
+import os
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objs as go
+import plotly.offline as py
 from src.utils import calc_intervals
 
 def calc_fig_size(pic_ratio, multiplier=2):
@@ -172,12 +175,32 @@ def create_grid(x_min, x_max, y_min, y_max, data_points, model, x_first_feature=
             Z[i] = model.predict(X=np.stack([Y[i], X[i]], axis=1))
     return X, Y, Z
 
-def plot_3d_surface(X, Y, Z, elevation=50, rotation=45, figsize=(15,15), saving=False, dir_name=None, model_name=None):
+def plot_3d_surface(X, Y, Z, x_label, y_label, z_label, label_fs=15, elevation=50, rotation=45, figsize=(15,15), saving=False, dir_name=None, model_name=None):
     fig = plt.figure(figsize=(15,15))
     ax = fig.gca(projection='3d')
     ax.plot_surface(X=X, Y=Y, Z=Z, cmap="coolwarm")
     ax.view_init(elevation, rotation)
+    ax.set_xlabel(x_label, {'fontsize':label_fs}, labelpad=10)
+    ax.set_ylabel(y_label, {'fontsize':label_fs}, labelpad=10)
+    ax.set_zlabel(z_label, {'fontsize':label_fs}, labelpad=20)
     if saving and model_name and dir_name:
         fn='model_{0}_elev_{1}_rotat_{2}.png'.format(model_name, elevation, rotation)
         fig.savefig(os.path.join(dir_name, fn))
     return fig, ax
+    
+def generate_off_plotly_3d_surface(X, Y, Z, title, save_to_path):
+    data = [
+        go.Surface(
+            z=Z,
+            x=X,
+            y=Y
+        )
+    ]
+    layout = go.Layout(
+        title=title,
+        autosize=True,
+        width=750,
+        height=750
+    )
+    fig = go.Figure(data=data, layout=layout)
+    py.plot(fig, filename=save_to_path)
