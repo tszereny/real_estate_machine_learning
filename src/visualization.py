@@ -187,20 +187,133 @@ def plot_3d_surface(X, Y, Z, x_label, y_label, z_label, label_fs=15, elevation=5
         fn='model_{0}_elev_{1}_rotat_{2}.png'.format(model_name, elevation, rotation)
         fig.savefig(os.path.join(dir_name, fn))
     return fig, ax
+
+def create_scatter_text(lat, lat_text, lng, lng_text, addr0, addr1, addr_text, pps, pps_text, price, price_text, area, area_text):
+    return '{lat_text}: {lat:.4f}<br>{lng_text}: {lng:.4f}<br>{addr0}. {addr_text}, {addr1}<br>{pps_text}: {pps:.2f}k<br>{price_text}: {price:.1f}M<br>{area_text}: {area:.0f} sqm'.format(lat=lat, lat_text=lat_text, lng=lng, lng_text=lng_text, addr0=addr0, addr1=addr1, addr_text=addr_text, pps=pps/1000, pps_text=pps_text, price=price/1000000, price_text=price_text, area=area, area_text=area_text)
+create_scatter_text = np.vectorize(create_scatter_text)
     
-def generate_off_plotly_3d_surface(X, Y, Z, title, save_to_path):
+def create_surface_text(x, y, z, x_text, y_text, z_text):
+    return '{x_text}: {x:.4f}<br>{y_text}: {y:.4f}<br>{z_text}: {z:.2f}k'.format(x=x, y=y, z=z/1000, x_text=x_text, y_text=y_text, z_text=z_text)
+create_surface_text = np.vectorize(create_surface_text)
+
+def create_background_map(figsize, x, y, epsg_code=4326, dpi=160, service='Canvas/World_Light_Gray_Base', save_path=None):
+    m = Basemap(urcrnrlat=y.max(),     # top
+              urcrnrlon=x.max(),   # bottom
+              llcrnrlat=y.min(),     # left
+              llcrnrlon=x.min(),   # right
+              epsg=epsg_code)
+    width = figsize[0]
+    height = figsize[1]
+    fig = plt.gcf()
+    fig.set_size_inches(width, height)
+    dpi = dpi
+    xpixels = dpi * width
+    m.arcgisimage(service=service, xpixels=xpixels)
+    if save_path:
+        fig = plt.gcf()
+        fig.savefig(save_path)
+    return plt.gcf(), plt.gca()
+
+def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_size=8, dpi=40, alpha=0.8, cbar_title=None, colormap='Hot', save_to_path=None):
+    data = [
+        go.Scattergl(
+        x = x,
+        y = y,
+        text = text,
+        hoverinfo='text',
+        mode='markers',
+        marker=dict(
+            size=marker_size,
+            color=c,
+            colorscale=colormap,
+            showscale=True,
+            opacity=alpha,
+            colorbar=dict(
+                title=cbar_title
+            ),
+        )
+    )]
+    layout = go.Layout(
+        xaxis=dict(
+            title=x_label
+        ),
+        yaxis=dict(
+            title=y_label
+        ),
+        hovermode='closest',
+        width=figsize[0] * dpi,
+        height=figsize[1] * dpi
+    )
+    fig = go.Figure(data=data, layout=layout)
+    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    py.iplot(fig, show_link=False)
+
+def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_title, zoom=10, alpha=0.8, marker_size=8, colormap='Hot', save_to_path=None):
+    mapbox_access_token = 'pk.eyJ1IjoiZXRwaW5hcmQiLCJhIjoiY2luMHIzdHE0MGFxNXVubTRxczZ2YmUxaCJ9.hwWZful0U2CQxit4ItNsiQ'
+
+    data = [
+        go.Scattermapbox(
+            lat=y,
+            lon=x,
+            text = text,
+            hoverinfo='text',
+            mode='markers',
+            marker=dict(
+                size=marker_size,
+                color=c,
+                colorscale=colormap,
+                showscale=True,
+                opacity=alpha,
+                colorbar=dict(
+                    title=cbar_title
+                ),
+            ),
+        )
+    ]
+    layout = go.Layout(
+    autosize=True,
+    hovermode='closest',
+    mapbox=dict(
+        accesstoken=mapbox_access_token,
+        bearing=0,
+        center=dict(
+                lat=center_lat,
+                lon=center_lng
+            ),
+        pitch=0,
+        zoom=zoom
+        ),
+    )
+    fig = go.Figure(data=data, layout=layout)
+    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    py.iplot(fig, show_link=False)
+
+
+def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_title=None, title=None, save_to_path=None):
     data = [
         go.Surface(
             z=Z,
             x=X,
-            y=Y
+            y=Y,
+            text = T,
+            hoverinfo = None if T is None else 'text',
+            colorbar=dict(
+                title=cbar_title
+            )
         )
     ]
     layout = go.Layout(
-        title=title,
-        autosize=True,
-        width=750,
-        height=750
+        title = title,
+        scene = dict(
+            xaxis = dict(
+                title=x_label),
+            yaxis = dict(
+                title=y_label),
+            zaxis = dict(
+                title=z_label),),
+        width=700,
+        height=700
     )
     fig = go.Figure(data=data, layout=layout)
-    py.plot(fig, filename=save_to_path)
+    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    py.iplot(fig, show_link=False)
