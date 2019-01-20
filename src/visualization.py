@@ -21,6 +21,7 @@ def generate_colors(df, c_map, condition):
     
 def plot_na_ratio(df, grouping, subplot_n=2,  dest_dir='.'):
     title='Missing values-ratio by features (%)'
+    save_title = 'missing_values_ratio_by_features'
     na_count=df.groupby(grouping).count()
     total=df.groupby(grouping).agg(lambda col: len(col))
     na_total_ratio=100-na_count/total*100
@@ -36,7 +37,7 @@ def plot_na_ratio(df, grouping, subplot_n=2,  dest_dir='.'):
         ax_df=sorted_df.iloc[ints[i].start:ints[i].stop, :]
         ax_df.plot(kind='bar', figsize=(17,15), legend=True, ax=axs[i])
         axs[i].set_xticklabels(ax_df.index.tolist(), fontsize=14)
-    fig.savefig('{0}/{1}.png'.format(dest_dir, title))
+    fig.savefig('{0}/{1}.png'.format(dest_dir, save_title), bbox_inches = 'tight')
     return fig, axs
     
     
@@ -184,7 +185,7 @@ def plot_3d_surface(X, Y, Z, x_label, y_label, z_label, label_fs=15, elevation=5
     ax.set_ylabel(y_label, {'fontsize':label_fs}, labelpad=10)
     ax.set_zlabel(z_label, {'fontsize':label_fs}, labelpad=20)
     if saving and model_name and dir_name:
-        fn='model_{0}_elev_{1}_rotat_{2}.png'.format(model_name, elevation, rotation)
+        fn='{0}.png'.format(model_name)
         fig.savefig(os.path.join(dir_name, fn))
     return fig, ax
 
@@ -214,7 +215,7 @@ def create_background_map(figsize, x, y, epsg_code=4326, dpi=160, service='Canva
         fig.savefig(save_path)
     return plt.gcf(), plt.gca()
 
-def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_size=8, dpi=40, alpha=0.8, cbar_title=None, colormap='Hot', save_to_path=None):
+def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_size=8, dpi=40, alpha=0.8, cbar_title=None, colormap='Hot', save_to_path=None, show=True):
     data = [
         go.Scattergl(
         x = x,
@@ -246,9 +247,9 @@ def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_siz
     )
     fig = go.Figure(data=data, layout=layout)
     if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    py.iplot(fig, show_link=False)
+    if show: py.iplot(fig, show_link=False)
 
-def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_title, zoom=10, alpha=0.8, marker_size=8, colormap='Hot', save_to_path=None):
+def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_title, zoom=10, alpha=0.8, marker_size=8, colormap='Hot', save_to_path=None, show = True):
     mapbox_access_token = 'pk.eyJ1IjoiZXRwaW5hcmQiLCJhIjoiY2luMHIzdHE0MGFxNXVubTRxczZ2YmUxaCJ9.hwWZful0U2CQxit4ItNsiQ'
 
     data = [
@@ -286,10 +287,10 @@ def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_ti
     )
     fig = go.Figure(data=data, layout=layout)
     if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    py.iplot(fig, show_link=False)
+    if show: py.iplot(fig, show_link=False)
 
 
-def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_title=None, title=None, save_to_path=None):
+def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_title=None, title=None, save_to_path=None, show=True):
     data = [
         go.Surface(
             z=Z,
@@ -316,4 +317,4 @@ def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_tit
     )
     fig = go.Figure(data=data, layout=layout)
     if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    py.iplot(fig, show_link=False)
+    if show: py.iplot(fig, show_link=False)
