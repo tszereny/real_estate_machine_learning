@@ -39,7 +39,7 @@ After the processing steps:
 
 Training dataset for respective listing type (for-sale, for-rent):  
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/missing_values_ratio_by_features.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/missing_values_ratio_by_features.png?raw=true'>
 
 In the scraped dataset, if the user didn't fill in the given attribute of listing property e.g. *condition of the real estate, balcony area size* etc. then it will appear as missing datapoint. On other hand if a feature is not applicable for the given listing type e.g. in case of properties for sale *minimum tenancy, smoking allowed, pets allowed* it will appear as missing value as well.
 
@@ -79,28 +79,28 @@ The method I used is z-score or standardization, which is a simple approach to f
 However this method works well only with quasi normally distributed features, therefore some datatransformation were needed.  
 Red lines indicates +/- 3 standard deviation from the mean.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/outliers.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/outliers.png?raw=true'>
 
 Outliers can be an user input errors or if even they are valid inputs they are not representing well an average real estate in Budapest, therefore the data needs to be normalized by removing outliers.  
 Based on the four features above datapoints, which are greater than 2.5 SD and less than -2.5 SD have been removed, therefore 7.64% of the records were removed.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/sigma_records_to_be_removed.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/sigma_records_to_be_removed.png?raw=true'>
 
 ### Data cleaning
 After removing outliers, features have the following estimated distribution. Histogram of *Price* and *Area size* look good, although *Latitude* and *Longitude* have some strange spikes, which is worth investigating.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/dist_features.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/dist_features.png?raw=true'>
 
 The darker the dot in the map the more properties are listed for sale on the exact spot. It indicates either people want to sell off their apartment under the same address or there are some errors occured during data gathering.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/address_cleaning.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/address_cleaning.png?raw=true'>
 
 It turned out that these addresses don't contain the street name and the street number, but only the name of the district, sub-district or the residental park name.  
 The issue with the gps coordinates is that if the user has not specified the exact address only the district then gps coordinates point to the center of the district, sub-district. They cover too broad area, consequently longitude and latitude pairs are not accurate enough. These records have been removed using official public domain names such as: street, road, square etc. and regular expressions.  
 
 After data normalization, I managed to eliminate big spikes in the histogram.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/normalization.png?raw=true>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/normalization.png?raw=true'>
 
 ## Processed data
 
@@ -110,7 +110,7 @@ Number of records after data normalization:
 
 Datapoints before fitting the different models, the hotter the point the higer is the Price per squaremeter in that location.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1'>
 
 ### [Interactive plotly graph](./reports/scatter_map_box.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/scatter_map_box.html?raw=1), then open it with your browser.
@@ -141,7 +141,7 @@ During the Exploratory Data Analysis it was obvious that there is no linear rela
 
 Mean R$^2$ on 10 validation folds: 16.090% with 4.188% standard deviation.
 
-<img src= https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/lin_model_16.png?raw=1>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/lin_model_16.png?raw=1'>
 
 ### Polynomial
 Hyperparameter:
@@ -150,7 +150,7 @@ Hyperparameter:
 After tuning the hyperparameter, the model performs the best with polynomial degree of *13*.  
 Mean R$^2$ on 10 validation folds: 26.292% with 3.475% standard deviation.
 
-<img src= https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1'>
 
 ### [Interactive 3D plotly graph](./reports/poly_model_26.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/poly_model_26.html?raw=1), then open it with your browser.
@@ -217,7 +217,7 @@ The idea is the same to train a lot of weak learners to generate ensemble model.
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
 Mean R$^2$ on 10 validation folds: 48.418% with 4.440% standard deviation.
 
-<img src=https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1>
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1'>
 
 ### [Interactive 3D plotly graph](./reports/ada_model_48.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/ada_model_48.html?raw=1), then open it with your browser.
