@@ -7,7 +7,7 @@ In this project, I am approaching this problem from supply side by builing a mac
 - Offline: the model is not learning real-time, but based on the snapshot of the real estate market
 - Regression: predicted value is quasi continuous, in contrast with classification, where the predicted value is category/nominal  
 
-At the moment some websites publish average price per m$^2$ of the district and sub-district, where the given property is located.  
+At the moment some websites publish average price per sqm of the district and sub-district, where the given property is located.  
 The machine learning model can be useful for:
 - Induviduals, who are planning to buy or sell their real estate in Budapest
 - Real Estate agencies, for whom knowing the fair offer price is essential
@@ -58,7 +58,7 @@ Fully represented features:
 - Longitude
 - Elevation
 - Area size
-- Total number of rooms, sum of *rooms equal or greater than 12 m$^2$* and *rooms less than 12 m$^2$*
+- Total number of rooms, sum of *rooms equal or greater than 12 sqm* and *rooms less than 12 sqm*
 - District
 - Address
 
@@ -139,7 +139,7 @@ By using only two regressors, it is possible to visualize the decision function 
 ### Linear
 During the Exploratory Data Analysis it was obvious that there is no linear relationship between *Price per squaremeter* and *Latitude*, *Longitude*, but still it is worth checking as the rough estimate. Price per squaremeter is higher on Buda side.
 
-Mean R$^2$ on 10 validation folds: 16.090% with 4.188% standard deviation.
+Mean R2 on 10 validation folds: 16.090% with 4.188% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/lin_model_16.png?raw=1'>
 
@@ -148,7 +148,7 @@ Hyperparameter:
 - Degree of polynomial function  
 
 After tuning the hyperparameter, the model performs the best with polynomial degree of *13*.  
-Mean R$^2$ on 10 validation folds: 26.292% with 3.475% standard deviation.
+Mean R2 on 10 validation folds: 26.292% with 3.475% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1'>
 
@@ -162,16 +162,16 @@ Kernel: Gaussian Radial Basis function
 - *Gamma* defines kurtosis of the Gaussian curve  
 
 Trained two models, difference between them is the level of regularization.  
-- More regularized, *C*=10000, *Gamma*=10: Mean R$^2$ on 10 validation folds: 42.766% with 3.782% standard deviation.
+- More regularized, *C*=10000, *Gamma*=10: Mean R2 on 10 validation folds: 42.766% with 3.782% standard deviation.
 
-<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_43.png?raw=1',>
+<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_43.png?raw=1'>
 
 ### [Interactive 3D plotly graph](./reports/svr_model_43.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_43.html?raw=1), then open it with your browser.
 
-- Less regularized, *C*=100000, *Gamma*=100:  Mean R$^2$ on 10 validation folds: 48.126% with 4.535% standard deviation. The best estimator after tuning hyperparameters.
+- Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 48.126% with 4.535% standard deviation. The best estimator after tuning hyperparameters.
 
-<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_48.png?raw=1',>
+<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_48.png?raw=1'>
 
 ### [Interactive 3D plotly graph](./reports/svr_model_48.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_48.html?raw=1), then open it with your browser.
@@ -190,7 +190,7 @@ Decision Tree Hyperparameters:
 After tuning of hyperparameters,
 - *max_depth*=60, *max_leaf_nodes*=300 
 
-Mean R$^2$ on 10 validation folds: 50.409% with 5.217% standard deviation.
+Mean R2 on 10 validation folds: 50.409% with 5.217% standard deviation.
 
 <img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_50.png?raw=1'>
 
@@ -200,7 +200,7 @@ If it is not working, clone the repository or [right click and save as](https://
 #### Random Forest:
 Ensemble learning method, training 100 decison trees on bootstraped random records of the training data, with the same hyperparamters as decision tree, namely: *max_depth*=60, *max_leaf_nodes*=300 
 
-Mean R$^2$ on 'out of bag' data: 56.706%.
+Mean R2 on 'out of bag' data: 56.706%.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_57.png?raw=1'>
 
@@ -215,7 +215,7 @@ The idea is the same to train a lot of weak learners to generate ensemble model.
 
 #### AdaBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
-Mean R$^2$ on 10 validation folds: 48.418% with 4.440% standard deviation.
+Mean R2 on 10 validation folds: 48.418% with 4.440% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1'>
 
@@ -224,7 +224,7 @@ If it is not working, clone the repository or [right click and save as](https://
 
 #### GradientBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 100  
-Mean R$^2$ on 10 validation folds: 55.058% with 5.271% standard deviation.
+Mean R2 on 10 validation folds: 55.058% with 5.271% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_55.png?raw=1'>
 
@@ -236,7 +236,7 @@ Hyperparamter:
 - *k*-closest neighbours  
 After tuning hyperparamter *k*=88, distance function=euclidean, weights based on the distance i.e. closest datapoint has more effect
 
-Mean R$^2$ on 10 validation folds: 53.934% with 5.165% standard deviation.
+Mean R2 on 10 validation folds: 53.934% with 5.165% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_54.png?raw=1'>
 
