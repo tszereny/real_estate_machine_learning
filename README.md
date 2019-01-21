@@ -253,6 +253,18 @@ All the trained models can be found in [model](https://github.com/tszereny/real_
 - GPS coordinates of your property, i.e. Latitude and Longitude, you can easily get it from Google Maps
 - Area size measured in square meter
 
+
+```python
+import pickle
+```
+
+File path of one of the most accurate model, Random Forest:
+
+
+```python
+filepath_of_the_model='./model/forest_model_57.pkl'
+```
+
 Loading the model from disk to python
 
 
