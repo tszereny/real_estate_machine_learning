@@ -1,14 +1,14 @@
 
 
 # Real estate market in Budapest, Hungary
-Real estate market is booming, it is particularly true for Budapest, capital city of Hungary, where price of the real estates got multiplied relatively to last years's price. In the current situation induviduals are interested in the value of their property, which is pretty difficult to estimate, since it depends on multiple factor.
+Real estate market is booming, it is particularly true for Budapest, capital city of Hungary, where price of the real estates got multiplied relatively to last years's price. In the current situation individuals are interested in the value of their property, which is pretty difficult to estimate, since it depends on multiple factor.
 ## Objective
 In this project, I am approaching this problem from supply side by builing a machine learning model to estimate fair offer price of the given real estate in Budapest for-sale and for-rent. The output of this project is a supervised offline regression model, which can calculate the offer price of a property based on the given inputs.
 - Supervised: desired values are known. e.g. price of the real estates are available
 - Offline: the model is not learning real-time, but based on the snapshot of the real estate market
 - Regression: predicted value is quasi continuous, in contrast with classification, where the predicted value is category/nominal  
 
-At the moment some websites publish average price per sqm of the district and sub-district, where the given property is located.  
+At the moment some websites publish average price per square meter of the district and sub-district, where the given property is located.  
 The machine learning model can be useful for:
 - Individuals, who are planning to buy or sell their real estate in Budapest
 - Real Estate agencies, for whom knowing the fair offer price is essential
@@ -83,7 +83,7 @@ Red lines indicates +/- 3 standard deviation from the mean.
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/outliers.png?raw=true'>
 
 Outliers can be an user input errors or if even they are valid inputs they are not representing well an average real estate in Budapest, therefore the data needs to be normalized by removing outliers.  
-Based on the four features above datapoints, which are greater than 2.5 SD and less than -2.5 SD have been removed, therefore 7.64% of the records were removed.
+Based on the four features above, which are greater than 2.5 SD and less than -2.5 SD have been removed, therefore 7.64% of the records were removed.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/sigma_records_to_be_removed.png?raw=true'>
 
@@ -97,7 +97,7 @@ The darker the dot in the map the more properties are listed for sale on the exa
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/address_cleaning.png?raw=true'>
 
 It turned out that these addresses don't contain the street name and the street number, but only the name of the district, sub-district or the residental park name.  
-The issue with the gps coordinates is that if the user has not specified the exact address only the district then gps coordinates point to the center of the district, sub-district. They cover too broad area, consequently longitude and latitude pairs are not accurate enough. These records have been removed using official public domain names such as: street, road, square etc. and regular expressions.  
+The issue with the gps coordinates is that if the user has not specified the exact address only the district then gps coordinates point to the center of the district, sub-district. They cover too broad area, consequently longitude and latitude pairs are not accurate enough. These records have been removed with the help of official public domain names such as: street, road, square etc. and defined patterns in regular expression.  
 
 After data normalization, I managed to eliminate big spikes in the histogram.
 
@@ -107,14 +107,14 @@ After data normalization, I managed to eliminate big spikes in the histogram.
 
 Number of records after data normalization:
 - Training set: 22,660, 65.4% of the raw training data
-- Testing set: 6,321, 66.6% of the raw testing data
+- Testing set: 6,321, 66.7% of the raw testing data
 
-Datapoints before fitting the different models, the hotter the point the higer is the Price per squaremeter in that location.
+Datapoints before fitting the different models, the hotter the point the higher is the Price per square meter in that location. The task is given to fit a surface onto these points, which can predict the price of the real estate most accurately.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1'>
 
-### [Interactive plotly graph](./reports/scatter_map_box.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/scatter_map_box.html?raw=1), then open it with your browser.
+### [Interactive plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/scatter_map_box.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
 #### Details
 For the more details, graphs and code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
@@ -154,7 +154,7 @@ Mean R2 on 10 validation folds: 26.292% with 3.475% standard deviation.
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1'>
 
 ### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/poly_model_26.html?raw=1)
-Clone the repository or right click on the link and **save as**/**save link as** then open it with your browser.
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
 ### SVM
 Hyperparameters:
@@ -253,6 +253,7 @@ All the trained models can be found in [model](https://github.com/tszereny/real_
 - GPS coordinates of your property, i.e. Latitude and Longitude, you can easily get it from Google Maps
 - Area size measured in square meter
 
+#### The python code:
 
 ```python
 import pickle
