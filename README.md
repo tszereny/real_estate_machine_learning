@@ -1,4 +1,5 @@
 
+
 # Real estate market in Budapest, Hungary
 Real estate market is booming, it is particularly true for Budapest, capital city of Hungary, where price of the real estates got multiplied relatively to last years's price. In the current situation induviduals are interested in the value of their property, which is pretty difficult to estimate, since it depends on multiple factor.
 ## Objective
@@ -9,7 +10,7 @@ In this project, I am approaching this problem from supply side by builing a mac
 
 At the moment some websites publish average price per sqm of the district and sub-district, where the given property is located.  
 The machine learning model can be useful for:
-- Induviduals, who are planning to buy or sell their real estate in Budapest
+- Individuals, who are planning to buy or sell their real estate in Budapest
 - Real Estate agencies, for whom knowing the fair offer price is essential
 
 ## About the data
@@ -115,7 +116,7 @@ Datapoints before fitting the different models, the hotter the point the higer i
 ### [Interactive plotly graph](./reports/scatter_map_box.html)
 If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/scatter_map_box.html?raw=1), then open it with your browser.
 
-### Details
+#### Details
 For the more details, graphs and code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
 
 ## Model fitting
@@ -152,8 +153,8 @@ Mean R2 on 10 validation folds: 26.292% with 3.475% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/poly_model_26.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/poly_model_26.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/poly_model_26.html?raw=1)
+Clone the repository or right click on the link and **save as**/**save link as** then open it with your browser.
 
 ### SVM
 Hyperparameters:
@@ -166,15 +167,15 @@ Trained two models, difference between them is the level of regularization.
 
 <img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_43.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/svr_model_43.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_43.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_43.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
 - Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 48.126% with 4.535% standard deviation. The best estimator after tuning hyperparameters.
 
 <img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_48.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/svr_model_48.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_48.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_48.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
 ### Decision tree
 Decision Tree Hyperparameters:
@@ -194,44 +195,44 @@ Mean R2 on 10 validation folds: 50.409% with 5.217% standard deviation.
 
 <img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_50.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/tree_model_50.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/tree_model_50.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/tree_model_50.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
-#### Random Forest:
+### Random Forest:
 Ensemble learning method, training 100 decison trees on bootstraped random records of the training data, with the same hyperparamters as decision tree, namely: *max_depth*=60, *max_leaf_nodes*=300 
 
 Mean R2 on 'out of bag' data: 56.706%.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_57.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/forest_model_57.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/forest_model_57.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/forest_model_57.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
-#### Boosting:
+### Boosting:
 - Adaptive Boosting
 - Gradient Boosting  
 
 The idea is the same to train a lot of weak learners to generate ensemble model. Weak learner can be any well regularized model such as SVM, Decision tree. In this case I chose decision tree, since it can be trained pretty fast as opposed to SVM.
 
-#### AdaBoost
+### AdaBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
 Mean R2 on 10 validation folds: 48.418% with 4.440% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/ada_model_48.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/ada_model_48.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/ada_model_48.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
-#### GradientBoost
+### GradientBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 100  
 Mean R2 on 10 validation folds: 55.058% with 5.271% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_55.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/grad_model_55.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/grad_model_55.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/grad_model_55.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
-#### K-Neighbours:
+### K-Neighbours:
 Hyperparamter:
 - *k*-closest neighbours  
 After tuning hyperparamter *k*=88, distance function=euclidean, weights based on the distance i.e. closest datapoint has more effect
@@ -240,8 +241,51 @@ Mean R2 on 10 validation folds: 53.934% with 5.165% standard deviation.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_54.png?raw=1'>
 
-### [Interactive 3D plotly graph](./reports/neigh_model_54.html)
-If it is not working, clone the repository or [right click and save as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/neigh_model_54.html?raw=1), then open it with your browser.
+### [Interactive 3D plotly graph](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/neigh_model_54.html?raw=1)
+Right click on the link and **save as**/**save link as** then open it with your browser.
 
-### Details
+#### Details
 For more details and for the code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
+
+### How to make predictions
+All the trained models can be found in [model](https://github.com/tszereny/real_estate_machine_learning/tree/master/model "tszereny's GitHub page") directory of my repository. Calculating the fair offer price of the given real estate in Budapest is pretty easy, all you need:
+- Python 3 with installed scikit-learn library
+- GPS coordinates of your property, i.e. Latitude and Longitude, you can easily get it from Google Maps
+- Area size measured in square meter
+
+Loading the model from disk to python
+
+
+```python
+with open(filepath_of_the_model, 'rb') as f:
+    model_obj = pickle.load(f)
+```
+
+Making predictions
+- Latitude: 47.498077
+- Longitude: 19.0796663
+- Area size: 64 square meter
+
+
+```python
+latitude, longitude = 47.498077, 19.0796663
+area_size = 64
+```
+
+
+```python
+predicted_price_per_sqm = model_obj.predict([[latitude, longitude]])[0]
+print('Based on the location, the fair offer price per square meter: {0:,.0f} Ft.'.format(predicted_price_per_sqm))
+```
+
+    Based on the location, the fair offer price per square meter: 588,504 Ft.
+    
+
+
+```python
+price = predicted_price_per_sqm * area_size
+print('Based on the location and area size, the fair offer price: {0:,.0f} Ft.'.format(price))
+```
+
+    Based on the location and area size, the fair offer price: 37,664,261 Ft.
+    
