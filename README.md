@@ -262,7 +262,7 @@ File path of one of the most accurate model, Random Forest:
 
 
 ```python
-filepath_of_the_model='./model/forest_model_57.pkl'
+filepath_of_the_model = './model/forest_model_57.pkl'
 ```
 
 Loading the model from disk to python
