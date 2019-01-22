@@ -122,7 +122,7 @@ For the more details, graphs and code check out the [notebook](https://github.co
 ## Model fitting
 - Linear
 - Polynomial
-- SVM, Gaussian Radial Basis functiom
+- SVM, Gaussian Radial Basis function
 - Decision tree
 - Random Forest
 - Adaptive Boosting
@@ -192,6 +192,7 @@ After tuning of hyperparameters,
 - *max_depth*=60, *max_leaf_nodes*=300 
 
 Mean R2 on 10 validation folds: 50.409% with 5.217% standard deviation.
+The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.
 
 <img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_50.png?raw=1'>
 
