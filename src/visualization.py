@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objs as go
-import plotly.offline as py
+import plotly as py
 from src.utils import calc_intervals
 
 def calc_fig_size(pic_ratio, multiplier=2):
@@ -215,7 +215,7 @@ def create_background_map(figsize, x, y, epsg_code=4326, dpi=160, service='Canva
         fig.savefig(save_path)
     return plt.gcf(), plt.gca()
 
-def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_size=8, dpi=40, alpha=0.8, cbar_title=None, colormap='Hot', save_to_path=None, show=True):
+def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_size=8, dpi=40, alpha=0.8, cbar_title=None, colormap='Hot', save_to_path=None, show=True, publish_name=None):
     data = [
         go.Scattergl(
         x = x,
@@ -246,10 +246,11 @@ def generate_plotly_scatter(x, y, c, x_label, y_label, text, figsize, marker_siz
         height=figsize[1] * dpi
     )
     fig = go.Figure(data=data, layout=layout)
-    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    if show: py.iplot(fig, show_link=False)
+    if publish_name: py.plotly.plot(fig, filename=publish_name,  show_link=True, auto_open=False)
+    if save_to_path: py.offline.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    if show: py.offline.iplot(fig, show_link=False)
 
-def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_title, zoom=10, alpha=0.8, marker_size=8, colormap='Hot', save_to_path=None, show = True):
+def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_title, zoom=10, alpha=0.8, marker_size=8, colormap='Hot', save_to_path=None, show = True, publish_name=None):
     mapbox_access_token = 'pk.eyJ1IjoiZXRwaW5hcmQiLCJhIjoiY2luMHIzdHE0MGFxNXVubTRxczZ2YmUxaCJ9.hwWZful0U2CQxit4ItNsiQ'
 
     data = [
@@ -286,11 +287,12 @@ def generate_plotly_scattermapbox(x, y, c, text, center_lat, center_lng, cbar_ti
         ),
     )
     fig = go.Figure(data=data, layout=layout)
-    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    if show: py.iplot(fig, show_link=False)
+    if publish_name: py.plotly.plot(fig, filename=publish_name,  show_link=True, auto_open=False)
+    if save_to_path: py.offline.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    if show: py.offline.iplot(fig, show_link=False)
 
 
-def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_title=None, title=None, save_to_path=None, show=True):
+def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_title=None, title=None, save_to_path=None, show=True, publish_name=None):
     data = [
         go.Surface(
             z=Z,
@@ -316,5 +318,6 @@ def generate_plotly_surface(X, Y, Z, x_label, y_label, z_label, T=None, cbar_tit
         height=700
     )
     fig = go.Figure(data=data, layout=layout)
-    if save_to_path: py.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
-    if show: py.iplot(fig, show_link=False)
+    if publish_name: py.plotly.plot(fig, filename=publish_name,  show_link=True, auto_open=False)
+    if save_to_path: py.offline.plot(fig, filename=save_to_path, show_link=False, auto_open=False)
+    if show: py.offline.iplot(fig, show_link=False)
