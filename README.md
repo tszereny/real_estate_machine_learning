@@ -15,14 +15,14 @@ The machine learning model can be useful for:
 
 ## About the data
 ### Scraped data
-I have written a Python script, based on my module [real_estate_hungary](https://github.com/tszereny/real_estate_hungary, "tszereny's GitHub page"), which extracts pieces of information from one of the most popular Hungarian [real estate website](https://ingatlan.com/, "https://ingatlan.com"). In short it turns the data on the website into tabular form.  
+I have written a Python script, based on my module [real_estate_hungary](https://github.com/tszereny/real_estate_hungary "tszereny's GitHub page"), which extracts pieces of information from one of the most popular Hungarian [real estate website](https://ingatlan.com/ "https://ingatlan.com"). In short it turns the data on the website into tabular form.  
 The scraped dataset contains more than 50,000 records of real estate properties in Budapest as of **November, 2018.**  
 ### OpenStreetMap
 Locating different attributes of Budapest, such as:
 - Boundaries of Budapest and its sub-districts
 - Uninhabited areas
 - Agglomeration of Budapest  
-Utilizing [overpy](https://github.com/DinoTools/python-overpy, "overpy's GitHub page") a Python wrapper to query geographical data from [OpenStreetMap](https://www.openstreetmap.org, "OpenStreetMap's homepage").  
+Utilizing [overpy](https://github.com/DinoTools/python-overpy "overpy's GitHub page") a Python wrapper to query geographical data from [OpenStreetMap](https://www.openstreetmap.org "OpenStreetMap's homepage").  
 
 ### Elevation
 GPS coordinates of the properties are available in the scraped data, although elevation of the given coordinate is not published on the real estate website. Luckily some folks put together [open-elevation API](https://github.com/Jorl17/open-elevation) to make it able to gather elevation data.  
