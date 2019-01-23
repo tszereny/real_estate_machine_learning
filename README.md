@@ -111,10 +111,11 @@ Number of records after data normalization:
 
 Datapoints before fitting the different models, the hotter the point the higher is the Price per square meter in that location. The task is given to fit a surface onto these points, which can predict the price of the real estate most accurately.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1'>
+<a href="https://plot.ly/~tszereny/0/#/">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive plotly graph](https://plot.ly/~tszereny/0/#/) 
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/scatter_map_box.html?raw=1) then open it with your browser.
+### For interactive graph click on the picture.
 
 #### Details
 For the more details, graphs and code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
@@ -128,7 +129,7 @@ For the more details, graphs and code check out the [notebook](https://github.co
 - Adaptive Boosting
 - Gradient Boosting
 - K-Neighbours
-- Dense Neural Network using Tensorflow in progress
+- Dense Neural Network using Tensorflow, in progress
 
 ### First phase
 Building an **intuitive** Machine Learning model to predict fair offer price of the given property in Budapest
@@ -151,10 +152,11 @@ Hyperparameter:
 After tuning the hyperparameter, the model performs the best with polynomial degree of *13*.  
 Mean R2 on 10 validation folds: 26.292% with 3.475% standard deviation.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1'>
+<a href="https://plot.ly/~tszereny/2">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_26.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/2)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/poly_model_26.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### SVM
 Hyperparameters:
@@ -165,17 +167,19 @@ Kernel: Gaussian Radial Basis function
 Trained two models, difference between them is the level of regularization.  
 - More regularized, *C*=10000, *Gamma*=10: Mean R2 on 10 validation folds: 42.766% with 3.782% standard deviation.
 
-<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_43.png?raw=1'>
+<a href="https://plot.ly/~tszereny/6">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_43.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/6)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_43.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 - Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 48.126% with 4.535% standard deviation. The best estimator after tuning hyperparameters.
 
-<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_48.png?raw=1'>
+<a href="https://plot.ly/~tszereny/4">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_48.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/4) 
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/svr_model_48.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### Decision tree
 Decision Tree Hyperparameters:
@@ -194,20 +198,22 @@ After tuning of hyperparameters,
 Mean R2 on 10 validation folds: 50.409% with 5.217% standard deviation.
 The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.
 
-<img src= 'https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_50.png?raw=1'>
+<a href="https://plot.ly/~tszereny/8">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_50.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/8)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/tree_model_50.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### Random Forest:
 Ensemble learning method, training 100 decison trees on bootstraped random records of the training data, with the same hyperparamters as decision tree, namely: *max_depth*=60, *max_leaf_nodes*=300 
 
-Mean R2 on 'out of bag' data: 56.706%.
+Mean R2 on the 'out of bag' validation data: 56.706%.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_57.png?raw=1'>
+<a href="https://plot.ly/~tszereny/10">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_57.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/10)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/forest_model_57.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### Boosting:
 - Adaptive Boosting
@@ -219,19 +225,21 @@ The idea is the same to train a lot of weak learners to generate ensemble model.
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
 Mean R2 on 10 validation folds: 48.418% with 4.440% standard deviation.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1'>
+<a href="https://plot.ly/~tszereny/12">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_48.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/12)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/ada_model_48.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### GradientBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 100  
 Mean R2 on 10 validation folds: 55.058% with 5.271% standard deviation.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_55.png?raw=1'>
+<a href="https://plot.ly/~tszereny/14">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_55.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/14)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/grad_model_55.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 ### K-Neighbours:
 Hyperparamter:
@@ -240,10 +248,11 @@ After tuning hyperparamter *k*=88, distance function=euclidean, weights based on
 
 Mean R2 on 10 validation folds: 53.934% with 5.165% standard deviation.
 
-<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_54.png?raw=1'>
+<a href="https://plot.ly/~tszereny/16">
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_54.png?raw=1" alt="For interactive plotly graph click on the picture">
+</a>
 
-### [Interactive 3D plotly graph](https://plot.ly/~tszereny/16)
-For offline version right click on the link and [save as/save link as](https://github.com/tszereny/real_estate_machine_learning/blob/master/reports/neigh_model_54.html?raw=1) then open it with your browser.
+### For interactive 3D graph click on the picture.
 
 #### Details
 For more details and for the code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
