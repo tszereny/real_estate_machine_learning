@@ -116,7 +116,7 @@ Scatter plots below represent the cross relationship between each feature
 
 Datapoints before fitting the different models, the hotter the point the higher is the Price per square meter in that location. The task is given to fit a surface onto these points, which can predict the price of the real estate most accurately.
 
-<a href="https://plot.ly/~tszereny/0/#/">
+<a href="https://plot.ly/~tszereny/0/#/" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -157,7 +157,7 @@ Hyperparameter:
 After tuning the hyperparameter, the model performs the best with polynomial degree of *9*.  
 Mean R2 on 10 validation folds: 27.295% with 3.640% standard deviation.
 
-<a href="https://plot.ly/~tszereny/2">
+<a href="https://plot.ly/~tszereny/2" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_27.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -180,7 +180,7 @@ Trained two models, difference between them is the level of regularization.
 
 - Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 49.526% with 4.826% standard deviation. The best estimator after tuning hyperparameters.
 
-<a href="https://plot.ly/~tszereny/4">
+<a href="https://plot.ly/~tszereny/4" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_50.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -203,7 +203,7 @@ After tuning of hyperparameters,
 Mean R2 on 10 validation folds: 51.125% with 4.843% standard deviation.
 The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.
 
-<a href="https://plot.ly/~tszereny/8">
+<a href="https://plot.ly/~tszereny/8" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_51.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -214,7 +214,7 @@ Ensemble learning method, training 100 decison trees on bootstraped random recor
 
 Mean R2 on the 'out of bag' validation data: 57.928%.
 
-<a href="https://plot.ly/~tszereny/10">
+<a href="https://plot.ly/~tszereny/10" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_58.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -230,7 +230,7 @@ The idea is the same to train a lot of weak learners to generate ensemble model.
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
 Mean R2 on 10 validation folds: 47.378% with 4.403% standard deviation.
 
-<a href="https://plot.ly/~tszereny/12">
+<a href="https://plot.ly/~tszereny/12" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_47.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -240,7 +240,7 @@ Mean R2 on 10 validation folds: 47.378% with 4.403% standard deviation.
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 100  
 Mean R2 on 10 validation folds: 55.999% with 4.791% standard deviation.
 
-<a href="https://plot.ly/~tszereny/14">
+<a href="https://plot.ly/~tszereny/14" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_56.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -253,7 +253,7 @@ After tuning hyperparamter *k*=92, distance function=euclidean, weights based on
 
 Mean R2 on 10 validation folds: 54.805% with 5.249% standard deviation.
 
-<a href="https://plot.ly/~tszereny/16">
+<a href="https://plot.ly/~tszereny/16" target="_blank">
   <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_55.png?raw=1" alt="For interactive plotly graph click on the picture">
 </a>
 
@@ -306,7 +306,7 @@ predicted_price_per_sqm = model_obj.predict([[latitude, longitude]])[0]
 print('Based on the location, the fair offer price per square meter: {0:,.0f} Ft.'.format(predicted_price_per_sqm))
 ```
 
-    Based on the location, the fair offer price per square meter: 588,504 Ft.
+    Based on the location, the fair offer price per square meter: 573,487 Ft.
     
 
 
@@ -315,5 +315,5 @@ price = predicted_price_per_sqm * area_size
 print('Based on the location and area size, the fair offer price: {0:,.0f} Ft.'.format(price))
 ```
 
-    Based on the location and area size, the fair offer price: 37,664,261 Ft.
+    Based on the location and area size, the fair offer price: 36,703,153 Ft.
     
