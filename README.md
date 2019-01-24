@@ -1,9 +1,9 @@
 
 
 # Real estate market in Budapest, Hungary
-Real estate market is booming, it is particularly true for Budapest, capital city of Hungary, where price of the real estates got multiplied relatively to last years's price. In the current situation individuals are interested in the value of their property, which is pretty difficult to estimate, since it depends on multiple factor.
+Real estate market is booming, it is particularly true for Budapest, capital city of Hungary, where price of the real estates got multiplied relatively to last years' price. In the current situation individuals are interested in the value of their property, which is pretty difficult to estimate, since it depends on multiple factors.
 ## Objective
-In this project, I am approaching this problem from supply side by builing a machine learning model to estimate fair offer price of the given real estate in Budapest for-sale and for-rent. The output of this project is a supervised offline regression model, which can calculate the offer price of a property based on the given inputs.
+In this project, I am approaching this problem from supply side by building a machine learning model to estimate fair offer price of the given real estate in Budapest for-sale and for-rent. The output of this project is a supervised offline regression model, which can calculate the offer price of a property based on the given inputs.
 - Supervised: desired values are known. e.g. price of the real estates are available
 - Offline: the model is not learning real-time, but based on the snapshot of the real estate market
 - Regression: predicted value is quasi continuous, in contrast with classification, where the predicted value is category/nominal  
