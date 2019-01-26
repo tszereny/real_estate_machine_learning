@@ -1,3 +1,7 @@
+data/ext
+data/interim
+data/processed
+reports/
 *.bak
 .ipynb_checkpoints/
 __pycache__/
