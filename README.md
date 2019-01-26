@@ -318,16 +318,16 @@ print('Based on the location and area size, the fair offer price: {0:,.0f} Ft.'.
     Based on the location and area size, the fair offer price: 36,703,153 Ft.
     
 ### Model boundaries
-The regression model was trained on datapoints listed in Budapest, therefore its predictions are restricted only to the boundaries of the city. Another issue is the uninhabited areas such as the river Danube and the islands along it. At the moment if I feed one of the GPS coordinate of Danube the model will be able to predict price, however it does not make any sense. In order to set the scope of the model a classifier should be trained, which can distinguesh  among three classes with high precision:
+The regression model was trained on datapoints listed in Budapest, therefore its predictions are restricted only to the boundaries of the city. Another issue is the uninhabited areas such as the river Danube and the islands along it. At the moment if I feed one of the GPS coordinate of Danube the model will be able to predict price, however it does not make a lot of sense. In order to set the scope of the model a classifier should be trained, which can distinguish among three classes:
 - Uninhabited area in Budapest
 - Inhabited area in Budapest
 - Area outside of Budapest
 
-Scraped dataset and the data queried from OpenStreetMap had sufficient number of distinct GPS coordinates to build a classifier. Training set before model fitting had the following structure.
+Scraped dataset and the data queried from OpenStreetMap had sufficient number of distinct GPS coordinates to build a classifier. Training set before model fitting had the following patterns.
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/budapest.png?raw=1'>
 
-Relative frequencies of the classes have been calculated as a benchmark of the classifier, in short if precision of the model is not higher than the 83.03% then the model fails.
+Relative occurrences of the classes have been calculated as a benchmark of the classifier, in short the accuracy of the model must be higher than the 83.03% otherwise it underperforms the base estimater based on probalities.
 
 |class|probablity|
 |:-----|----------:|
@@ -336,17 +336,17 @@ Relative frequencies of the classes have been calculated as a benchmark of the c
 |Area outside of Budapest|5.92%|
 
 Selected model is to classify the GPS coordinates into 3 classes is k-neighbours model, with *k*=1 paramter. By setting the *k* parameter to 1 the algorithm choses the closest neighbour in the area. Distances calculated by euclidean function.
-Classifier accuracy is both higher that 98% both on the testing set and the validation set, therefore the model outperformed the benchmark.
+Classifier accuracy is higher that 98% both in the testing set and the validation set, therefore the model outperformed the benchmark.
 
-#### Usage of th classifier
+#### Usage of the classifier
 The classification model is available in the [model](https://github.com/tszereny/real_estate_machine_learning/tree/master/model "tszereny's GitHub page") directory of my repository. The usage is pretty much the same as it was for regression, only the output is the label of the class e.g. 'Uninhabited area in Budapest', 'Inhabited area in Budapest', 'Area outside of Budapest'.
 
 As a demonstration I have looked up two GPS coordinates and feeded it to the model:
 1. GPS coordinate of the Liberty bridge in Budapest
-2. Random inhabited area
+2. Random inhabited area on Buda side
 
 The output can be seen below:
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/class_test.png?raw=1'>
 
-The classification model predicted correct classes. Going forward boundaries of the regression model can be restricted by combining with the trained classifier.
+The classification model predicted correct classes. Going forward boundaries of the regression model can be restricted by combining it with the trained classifier.
