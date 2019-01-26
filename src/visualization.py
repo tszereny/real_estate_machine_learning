@@ -94,7 +94,7 @@ def plot_scatter_matrix(df, fs=15):
             plt.subplots_adjust(wspace=0, hspace=0)
     return fig, axs
 
-def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160, service='Canvas/World_Light_Gray_Base'):
+def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, legend_labels=None, c_bar_shrink=1, xlabel=None, ylabel=None, clabel=None, s=25, linewidth=0.25, alpha=1, epsg_code=4326, dpi=160, service='Canvas/World_Light_Gray_Base'):
     m = Basemap(urcrnrlat=y.max(),     # top
               urcrnrlon=x.max(),   # bottom
               llcrnrlat=y.min(),     # left
@@ -107,7 +107,7 @@ def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, c_bar_shri
     dpi = dpi
     xpixels = dpi * width
     m.arcgisimage(service=service, xpixels=xpixels)
-    plt.scatter(x=x, y=y, c=c, cmap=colormap, s=s, alpha=alpha, linewidth=linewidth, edgecolor='Black')
+    plt.scatter(x=x, y=y, c=c, cmap=colormap, s=s, alpha=alpha, linewidth=linewidth, edgecolor='Black', label=legend_labels)
     plt.xticks(np.linspace(start=x.min(), stop=x.max(), num=np.ceil(width/2).astype(int)).round(3), fontsize=15)
     plt.yticks(np.linspace(start=y.min(), stop=y.max(), num=np.ceil(height/2).astype(int)).round(3), fontsize=15)
     plt.xlabel(x.name if xlabel is None else xlabel, fontsize=20)
@@ -115,6 +115,10 @@ def plot_scatter_map(figsize, x, y, c=None, colormap=None, cbar=True, c_bar_shri
     if c is not None and cbar:
         cbar = plt.colorbar(orientation='vertical', shrink=c_bar_shrink)
         cbar.set_label(c.name if clabel is None else clabel, rotation=90, fontsize=20)
+        if legend_labels:
+            cbar.set_ticks([*range(len(legend_labels))])
+            cbar.set_ticklabels(legend_labels)
+            plt.clim(-0.5, len(legend_labels)-0.5)
         cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontsize=15)
     return plt.gcf(), plt.gca()
     
