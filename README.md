@@ -114,13 +114,11 @@ Scatter plots below represent the cross relationship between each feature
 
 <img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/relationships.png?raw=true'>
 
-Datapoints before fitting the different models, the hotter the point the higher is the Price per square meter in that location. The task is given to fit a surface onto these points, which can predict the price of the real estate most accurately.
+Datapoints before fitting the different models, the hotter the point the higher is the Price per square meter in that location. The task is given to fit a surface onto these points, which can predict the price of the real estate most accurately.  
+#### For interactive graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/0/#/" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/scatter_map.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 #### Details
 For the more details, graphs and code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
@@ -155,13 +153,11 @@ Hyperparameter:
 - Degree of polynomial function  
 
 After tuning the hyperparameter, the model performs the best with polynomial degree of *9*.  
-Mean R2 on 10 validation folds: 27.295% with 3.640% standard deviation.
+Mean R2 on 10 validation folds: 27.295% with 3.640% standard deviation.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/2" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_27.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/poly_model_27.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### SVM
 Hyperparameters:
@@ -170,21 +166,17 @@ Kernel: Gaussian Radial Basis function
 - *Gamma* defines kurtosis of the Gaussian curve  
 
 Trained two models, difference between them is the level of regularization.  
-- More regularized, *C*=10000, *Gamma*=10: Mean R2 on 10 validation folds: 44.372% with 4.201% standard deviation.
+- More regularized, *C*=10000, *Gamma*=10: Mean R2 on 10 validation folds: 44.372% with 4.201% standard deviation.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/6">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_44.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_44.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
-### For interactive 3D graph click on the picture.
-
-- Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 49.526% with 4.826% standard deviation. The best estimator after tuning hyperparameters.
+- Less regularized, *C*=100000, *Gamma*=100:  Mean R2 on 10 validation folds: 49.526% with 4.826% standard deviation. The best estimator after tuning hyperparameters.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/4" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_50.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/svr_model_50.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### Decision tree
 Decision Tree Hyperparameters:
@@ -201,24 +193,20 @@ After tuning of hyperparameters,
 - *max_depth*=90, *max_leaf_nodes*=300 
 
 Mean R2 on 10 validation folds: 51.125% with 4.843% standard deviation.
-The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.
+The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/8" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_51.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/tree_model_51.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### Random Forest:
 Ensemble learning method, training 100 decison trees on bootstraped random records of the training data, with the same hyperparamters as decision tree, namely: *max_depth*=60, *max_leaf_nodes*=300 
 
-Mean R2 on the 'out of bag' validation data: 57.928%.
+Mean R2 on the 'out of bag' validation data: 57.928%.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/10" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_58.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/forest_model_58.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### Boosting:
 - Adaptive Boosting
@@ -228,36 +216,30 @@ The idea is the same to train a lot of weak learners to generate ensemble model.
 
 ### AdaBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 10,000  
-Mean R2 on 10 validation folds: 47.378% with 4.403% standard deviation.
+Mean R2 on 10 validation folds: 47.378% with 4.403% standard deviation.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/12" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_47.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/ada_model_47.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### GradientBoost
 Decision tree's hyperparamter: *max_depth*=10 and number of estimators: 100  
-Mean R2 on 10 validation folds: 55.999% with 4.791% standard deviation.
+Mean R2 on 10 validation folds: 55.999% with 4.791% standard deviation.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/14" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_56.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/grad_model_56.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 ### K-Neighbours:
 Hyperparamter:
 - *k*-closest neighbours  
 After tuning hyperparamter *k*=92, distance function=euclidean, weights based on the distance i.e. closest datapoint has more effect
 
-Mean R2 on 10 validation folds: 54.805% with 5.249% standard deviation.
+Mean R2 on 10 validation folds: 54.805% with 5.249% standard deviation.  
+#### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/16" target="_blank">
-  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_55.png?raw=1" alt="For interactive plotly graph click on the picture">
-</a>
-
-### For interactive 3D graph click on the picture.
+  <img src="https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/neigh_model_55.png?raw=1" alt="For interactive plotly graph click on the picture"></a>
 
 #### Details
 For more details and for the code check out the [notebook](https://github.com/tszereny/real_estate_machine_learning/tree/master/notebook "tszereny's GitHub page") directory in my repository.
