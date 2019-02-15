@@ -1,9 +1,11 @@
+import re
 import pandas as pd, numpy as np
 import string
 from zlib import crc32
+import src.preparation as prep
 
-def generate_na(df, na_eq):
-    gen_na=lambda x: None if x==na_eq else x
+def generate_na(df, na_eqs):
+    gen_na=lambda x: None if x in na_eqs else x
     if isinstance(df, pd.Series):
         return df.apply(gen_na)
     elif isinstance(df, pd.DataFrame):
@@ -44,7 +46,7 @@ def transform_naming(df):
     df=rename_cols_to_new(df)
     df=rename_cols_to_eng(df)
     df.address=df.address.str.strip()
-    df.desc=generate_na(df.desc, na_eq='|   |')
+    df.desc=generate_na(df.desc, na_eqs=['|   |', '| |', ' '])
     df=translate_listing_type(df)
     return df
 
@@ -100,3 +102,15 @@ def create_outlier_mask(st_df, columns, sigma_threshold = 3):
         mask = (st_df[c].values <= sigma_threshold) & (st_df[c].values >= sigma_threshold * (-1))
         outlier_mask = outlier_mask & mask
     return outlier_mask
+	
+def get_address_mask(series, public_domains_fn, street_num = True):
+    public_domains = prep.load_public_domain_names(public_domains_fn)
+    ptrn = '|'.join(['.* {}$'.format(d) for d in public_domains])
+    if street_num:
+        ptrn_dot = '|'.join(['.*{}.*\d\.$'.format(d) for d in public_domains])
+        ptrn_slash_num = '|'.join(['.*{}.*\d/[0-9]$'.format(d) for d in public_domains])
+        ptrn_slash_letter = '|'.join(['.*{}.*\d/[A-Z]$'.format(d) for d in public_domains])
+        ptrn_dash= '|'.join(['.*{}.*\d*-\d*$'.format(d) for d in public_domains])
+        ptrn = '|'.join([ptrn_dot, ptrn_slash_num, ptrn_slash_letter, ptrn_dash])
+    mask = series.apply(lambda a: bool(re.match(string=str(a), pattern=ptrn)))
+    return mask
