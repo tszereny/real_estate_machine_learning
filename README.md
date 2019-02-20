@@ -308,44 +308,13 @@ print('Based on the location and area size, the fair offer price: {0:,.0f} Ft.'.
 ### Model validation on testing set
 I have listed the best models and run predictions against the unseen testing set.
 
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Model</th>
-      <th>R2 on testing set %</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>SVM</td>
-      <td>45.63</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Decision tree</td>
-      <td>56.58</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Random Forest</td>
-      <td>58.92</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Gradient Boosting</td>
-      <td>60.61</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>K-Neighbours</td>
-      <td>60.61</td>
-    </tr>
-  </tbody>
-</table>
-</div>	
-
+|Model|R2 on testing set%|
+|:----|-----------------:|
+|SVM|45.63|
+|Decision Tree|56.58|
+|Random Forest|58.92|
+|Gradient Boosting|60.61|
+|K-Neighbours|60.51|
     
 ### Model boundaries
 The regression model was trained on datapoints listed in Budapest, therefore its predictions are restricted only to the boundaries of the city. Another issue is the uninhabited areas such as the river Danube and the islands along it. At the moment if I feed one of the GPS coordinate of Danube the model will be able to predict price, however it does not make a lot of sense. In order to set the scope of the model a classifier should be trained, which can distinguish among three classes:
