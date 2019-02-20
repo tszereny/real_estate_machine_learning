@@ -12,7 +12,7 @@ At the moment some websites publish average price per square meter of the distri
 The machine learning model can be useful for:
 - Individuals, who are planning to buy or sell their real estate in Budapest
 - Real Estate agencies, for whom knowing the fair offer price is essential
-- Detect fradualent properties
+- Detect fradualent activity
 
 ## About the data
 ### Scraped data
