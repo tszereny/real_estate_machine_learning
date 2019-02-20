@@ -41,7 +41,7 @@ def plot_na_ratio(df, grouping, subplot_n=2,  dest_dir='.'):
     return fig, axs
     
     
-def plot_scatter_matrix(df, fs=15):
+def plot_scatter_matrix(df, fs=15, alpha=1):
     col_n=len(df.columns)
     fig, axs = plt.subplots(col_n, col_n, figsize=(20,20))
     for c, c_k in enumerate(df):
@@ -51,23 +51,23 @@ def plot_scatter_matrix(df, fs=15):
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].yaxis.set_visible(False)
             elif (c==0) & (r==col_n-1):
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(True)
                 axs[r,c].yaxis.set_visible(True)
                 axs[r,c].set_xlabel(c_k, fontdict={'fontsize': fs})
                 axs[r,c].set_ylabel(r_k, fontdict={'fontsize': fs})
             elif c==0:
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].yaxis.set_visible(True)
                 axs[r,c].set_ylabel(r_k, fontdict={'fontsize': fs})
             elif r==col_n-1:
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(True)
                 axs[r,c].set_xlabel(c_k, fontdict={'fontsize': fs})
                 axs[r,c].yaxis.set_visible(False)
             elif (r==0) & (c==col_n-1):
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_ticks_position('top')
                 axs[r,c].yaxis.set_ticks_position('right')
                 axs[r,c].xaxis.set_label_position('top')
@@ -75,20 +75,20 @@ def plot_scatter_matrix(df, fs=15):
                 axs[r,c].set_xlabel(c_k, fontdict={'fontsize': fs})
                 axs[r,c].set_ylabel(r_k, fontdict={'fontsize': fs})          
             elif c==col_n-1:
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].set_ylabel(r_k, fontdict={'fontsize': fs})
                 axs[r,c].yaxis.set_ticks_position('right')
                 axs[r,c].yaxis.set_label_position('right')
             elif r==0:
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(True)
                 axs[r,c].set_xlabel(c_k, fontdict={'fontsize': fs})
                 axs[r,c].yaxis.set_visible(False)
                 axs[r,c].xaxis.set_ticks_position('top')
                 axs[r,c].xaxis.set_label_position('top')
             else:
-                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4)
+                df.plot(kind='scatter', x=c_k, y=r_k, ax=axs[r, c], s=4, alpha=alpha)
                 axs[r,c].xaxis.set_visible(False)
                 axs[r,c].yaxis.set_visible(False)
             plt.subplots_adjust(wspace=0, hspace=0)
