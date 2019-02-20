@@ -12,6 +12,7 @@ At the moment some websites publish average price per square meter of the distri
 The machine learning model can be useful for:
 - Individuals, who are planning to buy or sell their real estate in Budapest
 - Real Estate agencies, for whom knowing the fair offer price is essential
+- Detect fradualent properties
 
 ## About the data
 ### Scraped data
@@ -71,6 +72,123 @@ As a first step, my goal is to create an intuitive machine learning model, from 
 Building an **intuitive** Machine Learning model to predict fair offer price of the given property in Budapest
 - Dependent variable (predicted): **Price per squaremeter**
 - Explanatory variables (features): GPS coordinates (**Latitude**, **Longitude**)
+
+### Outliers
+Understand the dynamic of the data, by looking at the distribution of it.
+
+<img src='https://github.com/tszereny/real_estate_machine_learning/blob/master/data/img/histograms_bins_100.png?raw=true'>
+
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>price_per_sqm</th>
+      <th>price_in_huf</th>
+      <th>lat</th>
+      <th>lng</th>
+      <th>elevation</th>
+      <th>area_size</th>
+      <th>room_total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>3.460500e+04</td>
+      <td>3.460500e+04</td>
+      <td>34605.000000</td>
+      <td>34605.000000</td>
+      <td>34605.000000</td>
+      <td>34605.000000</td>
+      <td>34605.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>7.298856e+05</td>
+      <td>5.393875e+07</td>
+      <td>47.504952</td>
+      <td>19.070466</td>
+      <td>124.059529</td>
+      <td>72.705274</td>
+      <td>2.677908</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>2.674743e+05</td>
+      <td>4.727107e+07</td>
+      <td>0.034070</td>
+      <td>0.046005</td>
+      <td>36.189492</td>
+      <td>54.358514</td>
+      <td>1.448156</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>2.400000e+04</td>
+      <td>2.000000e+06</td>
+      <td>47.377407</td>
+      <td>18.938150</td>
+      <td>93.000000</td>
+      <td>8.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>5.520833e+05</td>
+      <td>2.890000e+07</td>
+      <td>47.488250</td>
+      <td>19.043684</td>
+      <td>108.000000</td>
+      <td>49.000000</td>
+      <td>2.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>6.901408e+05</td>
+      <td>4.280000e+07</td>
+      <td>47.504910</td>
+      <td>19.066221</td>
+      <td>113.000000</td>
+      <td>64.000000</td>
+      <td>3.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>8.541667e+05</td>
+      <td>6.490000e+07</td>
+      <td>47.522550</td>
+      <td>19.085848</td>
+      <td>120.000000</td>
+      <td>87.000000</td>
+      <td>3.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>4.000000e+06</td>
+      <td>3.410000e+09</td>
+      <td>47.610500</td>
+      <td>19.317210</td>
+      <td>462.000000</td>
+      <td>5800.000000</td>
+      <td>64.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 ### Outlier detection
 The method I used is z-score or standardization, which is a simple approach to filter out the outliers.
@@ -193,7 +311,7 @@ After tuning of hyperparameters,
 - *max_depth*=90, *max_leaf_nodes*=300 
 
 Mean R2 on 10 validation folds: 51.125% with 4.843% standard deviation.
-The CART algorithm is well presented on the surface chart, in which the algorithm keep partinioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.  
+The CART algorithm is well presented on the surface chart, in which the algorithm keep partitioning dependent variable along the different features. In this case price per square meter has been partitioned by finding the best thresholds in latitude and longitude to generate as homogeneous nodes as it possible.  
 #### For interactive 3D graph click on the picture below.  
 
 <a href="https://plot.ly/~tszereny/8" target="_blank">
@@ -298,6 +416,62 @@ print('Based on the location and area size, the fair offer price: {0:,.0f} Ft.'.
 ```
 
     Based on the location and area size, the fair offer price: 36,703,153 Ft.
+	
+### Model validation on testing set
+I have listed the best models and run predictions against the unseen testing set.
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Model</th>
+      <th>R2 on testing set %</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SVM</td>
+      <td>45.63</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Decision tree</td>
+      <td>56.58</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Random Forest</td>
+      <td>58.92</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Gradient Boosting</td>
+      <td>60.61</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>K-Neighbours</td>
+      <td>60.61</td>
+    </tr>
+  </tbody>
+</table>
+</div>	
+
     
 ### Model boundaries
 The regression model was trained on datapoints listed in Budapest, therefore its predictions are restricted only to the boundaries of the city. Another issue is the uninhabited areas such as the river Danube and the islands along it. At the moment if I feed one of the GPS coordinate of Danube the model will be able to predict price, however it does not make a lot of sense. In order to set the scope of the model a classifier should be trained, which can distinguish among three classes:
