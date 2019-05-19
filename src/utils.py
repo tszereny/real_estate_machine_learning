@@ -2,6 +2,28 @@ import numpy as np
 import json
 import smtplib, ssl, getpass
 import pickle
+import os
+from pandas import read_csv
+
+class RealEstateData:
+    NA_EQUIVALENTS = ['nincs megadva', '|   |', '| |', ' ']
+
+    def __init__(self, data_dir, file_name):
+        self.data_dir = data_dir
+        self.file_name = file_name
+
+    @property
+    def directories(self):
+        return os.listdir(self.data_dir)
+
+    def list_files(self, dir_name):
+        p = os.path.join(self.data_dir, dir_name)
+        return os.listdir(p)
+
+    def read_data(self, dir_name, date):
+        p = os.path.join(self.data_dir, dir_name, date, self.file_name)
+        df = read_csv(p, encoding='utf8', sep=',', na_values=self.NA_EQUIVALENTS)
+        return df
 
 class Email:
     
