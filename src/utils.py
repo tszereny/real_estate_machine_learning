@@ -20,8 +20,8 @@ class RealEstateData:
         p = os.path.join(self.data_dir, dir_name)
         return os.listdir(p)
 
-    def read_data(self, dir_name, date):
-        p = os.path.join(self.data_dir, dir_name, date, self.file_name)
+    def read(self, dir_name, date):
+        p = os.path.join(self.data_dir, date, dir_name, self.file_name)
         df = read_csv(p, encoding='utf8', sep=',', na_values=self.NA_EQUIVALENTS)
         return df
 
@@ -76,3 +76,7 @@ def calc_intervals(ints_n, length):
             r.append(range(strt, stp))
             strt=stp
     return r
+
+if __name__ == '__main__':
+    DIR = '../../real_estate_hungary/output/'
+    data = RealEstateData(data_dir=DIR, file_name='raw.csv')
