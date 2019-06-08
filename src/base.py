@@ -8,5 +8,5 @@ class BaseTransformer(BaseEstimator, TransformerMixin, metaclass=abc.ABCMeta):
         return self
 
     @abc.abstractmethod
-    def transform(self, X, y=None):
+    def transform(self, X):
         return self
