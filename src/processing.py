@@ -1,3 +1,4 @@
+from typing import List, Callable
 import re
 import pandas as pd, numpy as np
 import string
@@ -34,6 +35,32 @@ class Translator(BaseTransformer):
     def transform(self, X):
         X[self.column_name] = X[self.column_name].map(self.hun_eng_map)
         return X
+
+
+class StringStandardizer(BaseTransformer):
+
+    def __init__(self, func: Callable, column_names: List[str] = None):
+        self.column_names = column_names
+        self.func = func
+
+    def get_string_columns(self, X):
+        if self.column_names is None:
+            return [c for c, t in X.dtypes.items() if t == 'object']
+        return self.column_names
+
+    def transform(self, X):
+        X = X.copy()
+        self.column_names = self.get_string_columns(X)
+        return X[self.column_names].apply(self.func)
+
+
+class DuplicatesRemoval(BaseTransformer):
+
+    def __init__(self, columns):
+        self.columns = columns
+
+    def transform(self, X):
+        return X.drop_duplicates(subset=self.columns)
 
 def multiply(func, **kwargs):
     def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None, thousand_mlpr = 1e3, million_mlpr = 1e6, billion_mlpr = 1e9):
