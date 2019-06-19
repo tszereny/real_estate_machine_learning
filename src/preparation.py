@@ -5,25 +5,45 @@ from http.client import RemoteDisconnected
 import overpy
 from src.utils import read_txt, calc_intervals
 
+
+def append_to_elevation_data(input_df, input_latitude, input_longitude, output_df, output_latitude, output_longitude):
+    merged = input_df.merge(how='left', right=output_df, left_on=[input_longitude, input_latitude],
+                            right_on=[output_longitude, output_latitude])
+    not_in_input = merged[[output_longitude, output_latitude]].isnull().any(axis=1)
+    diff = merged[not_in_input]
+    elevation = Elevation(df=diff, batch_size=100, latitude=input_latitude, longitude=input_longitude)
+    retrieved = elevation.retrieve_to_df()
+    return retrieved
+
 class Elevation:
-    
-    def __init__(self, df, latitude, longitude, batch_size = None):
-        self.HEADERS={'content-type': 'application/json', 'accept': 'application/json'}
-        self.API = 'https://api.open-elevation.com/api/v1/lookup'
-        self._df = df
+    HEADERS = {'content-type': 'application/json', 'accept': 'application/json'}
+    API = 'https://api.open-elevation.com/api/v1/lookup'
+
+    def __init__(self, df, latitude, longitude, batch_size=None, use_only_unique=True):
+        self.only_unique = use_only_unique
         self.latitude = latitude
         self.longitude = longitude
-        self.batch_size = len(self._df) if batch_size is None else batch_size
+        self.df = df
+        self.batch_size = len(self.df) if batch_size is None else batch_size
         self.dfs = [df[interval.start:interval.stop] for interval in self.batch_intervals]
-    
+
+    @property
+    def df(self):
+        return self._df
+
+    @df.setter
+    def df(self, df):
+        self._df = df[[self.latitude, self.longitude]].drop_duplicates().reset_index(drop=True)
+        print('Total number of unique GPS coordinates: {0:,}'.format(len(self._df)))
+
     @property
     def n_batches(self):
-        n_batches = int(np.ceil(len(self._df)/self.batch_size))
+        n_batches = int(np.ceil(len(self.df)/self.batch_size))
         return n_batches
     
     @property
     def batch_intervals(self):
-        intervals = calc_intervals(self.n_batches, len(self._df)) if self.n_batches > 1 else [range(0, len(self._df))]
+        intervals = calc_intervals(self.n_batches, len(self.df)) if self.n_batches > 1 else [range(0, len(self.df))]
         return intervals
         
     @property
@@ -61,7 +81,7 @@ class Elevation:
                 if batch is not None:
                     break
             result = pd.concat([result, batch], axis=0)
-        return result.reset_index(drop = True)
+        return result.reset_index(drop=True)
 
 class OSM:
 
@@ -70,12 +90,12 @@ class OSM:
         overpass_api = overpy.Overpass()
         self.result = overpass_api.query(self.query)
     
-    def nodes_to_df(self, node_attrs = ['id', 'lat', 'lon']):
+    def nodes_to_df(self, node_attrs=['id', 'lat', 'lon']):
         nodes = [[n.__getattribute__(a) for a in node_attrs] for n in self.result.nodes]
         df = pd.DataFrame(nodes, columns=node_attrs)
         return df
     
-    def to_df(self, node_attrs = ['id', 'lat', 'lon'], add_tags = []):
+    def to_df(self, node_attrs=['id', 'lat', 'lon'], add_tags=[]):
         data = []
         for rel in self.result.relations:
             tags = [rel.tags[t] for t in add_tags]
@@ -91,15 +111,15 @@ class OSM:
                         rm = m.resolve()
                         node = [rm.__getattribute__(a) for a in node_attrs] + tags
                     data.append(node)
-        df=pd.DataFrame(data, columns=node_attrs + add_tags)
+        df = pd.DataFrame(data, columns=node_attrs + add_tags)
         return df
     
 def get_coordinates_from(geojson):
-    rows=[]
+    rows = []
     for feat in geojson['features']:
         nodes=feat['geometry']['coordinates']
         for node in nodes:
-            if len(node)>2:
+            if len(node) > 2:
                 for r in node:
                     rows.append(r)
             else:
@@ -107,12 +127,12 @@ def get_coordinates_from(geojson):
     return pd.DataFrame(rows, columns=['lng', 'lat'])
 
 def get_public_domain_names():
-    URL='https://ceginformaciosszolgalat.kormany.hu/download/b/46/11000/kozterulet_jelleg_2015_09_07.txt'
-    response=urllib.request.urlopen(URL)
-    txt=response.read()
-    decoded_txt=txt.decode(encoding='utf-8-sig')
+    URL = 'https://ceginformaciosszolgalat.kormany.hu/download/b/46/11000/kozterulet_jelleg_2015_09_07.txt'
+    response = urllib.request.urlopen(URL)
+    txt = response.read()
+    decoded_txt = txt.decode(encoding='utf-8-sig')
     return decoded_txt
 
 def load_public_domain_names(txt_path):
-    txt=read_txt(txt_path, encoding = None)
+    txt = read_txt(txt_path, encoding = None)
     return [line for line in txt.split('\n') if len(line)>0]
