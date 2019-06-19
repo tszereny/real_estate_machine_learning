@@ -26,6 +26,7 @@ class ColumnRenamer(BaseTransformer):
         X = self.to_eng(X)
         return X
 
+
 class Translator(BaseTransformer):
 
     def __init__(self, column_name, hun_eng_map):
@@ -56,11 +57,13 @@ class StringStandardizer(BaseTransformer):
 
 class DuplicatesRemoval(BaseTransformer):
 
-    def __init__(self, columns):
+    def __init__(self, columns, negation=False):
         self.columns = columns
+        self.negation = negation
 
     def transform(self, X):
-        return X.drop_duplicates(subset=self.columns)
+        columns = X.columns[~X.columns.isin(self.columns)].tolist() if self.negation else self.columns
+        return X.drop_duplicates(subset=columns)
 
 def multiply(func, **kwargs):
     def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None, thousand_mlpr = 1e3, million_mlpr = 1e6, billion_mlpr = 1e9):
@@ -114,7 +117,8 @@ def create_outlier_mask(st_df, columns, sigma_threshold = 3):
         mask = (st_df[c].values <= sigma_threshold) & (st_df[c].values >= sigma_threshold * (-1))
         outlier_mask = outlier_mask & mask
     return outlier_mask
-	
+
+
 def get_address_mask(series, public_domains_fn, street_num = True):
     public_domains = prep.load_public_domain_names(public_domains_fn)
     ptrn = '|'.join(['.* {}$'.format(d) for d in public_domains])
