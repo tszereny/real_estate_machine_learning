@@ -1,5 +1,5 @@
-from src.utils import RealEstateData
 import pytest
+from src.utils import RealEstateData
 from src.processing import ColumnRenamer, Translator
 from pipeline import OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
 import pandas as pd
