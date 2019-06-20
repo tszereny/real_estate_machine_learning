@@ -1,6 +1,7 @@
 import pytest
+import os
 from sklearn.pipeline import Pipeline
-from src.processing import ColumnRenamer, Translator, StringStandardizer
+from src.processing import ColumnRenamer, Translator, StringStandardizer, ElevationMerger
 from pipeline import OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
 
 
@@ -33,3 +34,17 @@ class TestTranslator:
         translated_listing_type = t.transform(real_estate_renamed)[to_be_translated]
         assert len(translated_listing_type.unique()) == 2
         assert translated_listing_type.apply(lambda s: s not in ('elado', 'kiado')).all() == True
+
+
+class TestElevationMerger:
+
+    @pytest.mark.skipif(False, reason='slow test')
+    def test_transform(self, sample_gps_data):
+        dummy_elevation_path = './dummy_elevation.csv'
+        em = ElevationMerger(left_latitude='lat', left_longitude='lng', elevation_data_path=dummy_elevation_path,
+                             elevation_latitude='latitude', elevation_longitude='longitude')
+        res = em.transform(sample_gps_data[-3:])
+        if os.path.exists(dummy_elevation_path):
+            os.remove(dummy_elevation_path)
+        assert len(res) == 3
+        assert res['elevation'].isin([130, 200, 145]).all()

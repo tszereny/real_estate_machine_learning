@@ -1,10 +1,12 @@
-from typing import List, Callable
+from typing import List, Callable, Union
 import re
 import pandas as pd, numpy as np
 import string
 from zlib import crc32
 from src.base import BaseTransformer
+from src.preparation import Elevation
 import src.preparation as prep
+from src.utils import load_elevation_data
 
 
 class ColumnRenamer(BaseTransformer):
@@ -64,6 +66,39 @@ class DuplicatesRemoval(BaseTransformer):
     def transform(self, X):
         columns = X.columns[~X.columns.isin(self.columns)].tolist() if self.negation else self.columns
         return X.drop_duplicates(subset=columns)
+
+
+class ElevationMerger(BaseTransformer):
+
+    def __init__(self, left_longitude: str, left_latitude: str, elevation_data_path: str, elevation_longitude: str, elevation_latitude: str, mode: str = 'w'):
+        self.left_longitude = left_longitude
+        self.left_latitude = left_latitude
+        self.elevation_data_path = elevation_data_path
+        self.elevation_longitude = elevation_longitude
+        self.elevation_latitude = elevation_latitude
+        self.mode = mode
+
+    @property
+    def elevation_data(self):
+        return load_elevation_data(self.elevation_data_path)
+
+    def transform(self, X: pd.DataFrame):
+        X = X.copy()
+        merged = X.merge(how='left', right=self.elevation_data, left_on=[self.left_longitude, self.left_latitude],
+                         right_on=[self.elevation_longitude, self.elevation_latitude])
+        not_in_elevation_mask = merged[[self.elevation_longitude, self.elevation_latitude]].isnull().any(axis=1)
+        not_in_elevation_data = merged[not_in_elevation_mask]
+        elevation = Elevation(df=not_in_elevation_data, batch_size=100, latitude=self.left_latitude,
+                              longitude=self.left_longitude)
+        retrieved = elevation.retrieve_to_df()
+        print(self.elevation_data)
+        print(retrieved)
+        output = pd.concat([self.elevation_data, retrieved], axis=0)
+        if self.mode == 'w':
+            output.to_csv(self.elevation_data_path, index=False)
+        return X.merge(how='left', right=output, left_on=[self.left_longitude, self.left_latitude],
+                       right_on=[self.elevation_longitude, self.elevation_latitude])
+
 
 def multiply(func, **kwargs):
     def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None, thousand_mlpr = 1e3, million_mlpr = 1e6, billion_mlpr = 1e9):

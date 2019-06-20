@@ -1,9 +1,14 @@
-import numpy as np
+import numpy as np, pandas as pd
 import json
 import smtplib, ssl, getpass
 import pickle
 import os
 from pandas import read_csv
+
+def load_elevation_data(file_path: str):
+    if os.path.exists(file_path):
+        return read_csv(file_path)
+    return pd.DataFrame({'elevation': [], 'longitude': [], 'latitude': []})
 
 class RealEstateData:
     NA_EQUIVALENTS = ['nincs megadva', '|   |', '| |', ' ']

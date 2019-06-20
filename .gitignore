@@ -6,3 +6,4 @@ reports/
 .ipynb_checkpoints/
 __pycache__/
 data/*.csv
+tests/*.csv

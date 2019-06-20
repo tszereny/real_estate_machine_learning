@@ -3,17 +3,8 @@ import urllib, json
 from urllib.request import HTTPDefaultErrorHandler, HTTPError, URLError
 from http.client import RemoteDisconnected
 import overpy
-from src.utils import read_txt, calc_intervals
+from src.utils import read_txt, calc_intervals, load_elevation_data
 
-
-def append_to_elevation_data(input_df, input_latitude, input_longitude, output_df, output_latitude, output_longitude):
-    merged = input_df.merge(how='left', right=output_df, left_on=[input_longitude, input_latitude],
-                            right_on=[output_longitude, output_latitude])
-    not_in_input = merged[[output_longitude, output_latitude]].isnull().any(axis=1)
-    diff = merged[not_in_input]
-    elevation = Elevation(df=diff, batch_size=100, latitude=input_latitude, longitude=input_longitude)
-    retrieved = elevation.retrieve_to_df()
-    return retrieved
 
 class Elevation:
     HEADERS = {'content-type': 'application/json', 'accept': 'application/json'}
