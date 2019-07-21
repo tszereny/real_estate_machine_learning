@@ -1,16 +1,26 @@
 import pytest
 import os
 from sklearn.pipeline import Pipeline
+import pandas as pd
 from src.processing import ColumnRenamer, Translator, StringStandardizer, ElevationMerger
 from pipeline import OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
+from .conftest import IS_TEST_SKIPPED
 
 
 class TestStringStandardizer:
 
+    def fill_with_none(self, s):
+        return s.apply(lambda x: None)
+
     def test_transform(self, real_estate_raw):
         df = real_estate_raw(0)
-        ss = StringStandardizer(func=lambda s: None)
-        assert ss.transform(df)[ss.column_names].isnull().all().all() == True
+        assert isinstance(df, pd.DataFrame)
+        ss = StringStandardizer(func=lambda s: self.fill_with_none(s))
+        assert isinstance(ss.get_string_columns(df), list)
+        result = ss.transform(df)
+        assert isinstance(result, pd.DataFrame)
+        assert result[ss.column_names].isnull().all().all() == True
+
 
 class TestColumRenamer:
 
@@ -38,9 +48,9 @@ class TestTranslator:
 
 class TestElevationMerger:
 
-    @pytest.mark.skipif(False, reason='slow test')
-    def test_transform(self, sample_gps_data):
-        dummy_elevation_path = './dummy_elevation.csv'
+    @pytest.mark.skipif(IS_TEST_SKIPPED, reason='slow test')
+    def test_retrieving(self, sample_gps_data):
+        dummy_elevation_path = 'tests/fixtures/not_existing_elevation_data.csv'
         em = ElevationMerger(left_latitude='lat', left_longitude='lng', elevation_data_path=dummy_elevation_path,
                              elevation_latitude='latitude', elevation_longitude='longitude')
         res = em.transform(sample_gps_data[-3:])
@@ -48,3 +58,12 @@ class TestElevationMerger:
             os.remove(dummy_elevation_path)
         assert len(res) == 3
         assert res['elevation'].isin([130, 200, 145]).all()
+
+    def test_merging(self, sample_gps_data):
+        dummy_elevation_path = 'tests/fixtures/dummy_elevation.csv'
+        em = ElevationMerger(left_latitude='lat', left_longitude='lng', elevation_data_path=dummy_elevation_path,
+                             elevation_latitude='latitude', elevation_longitude='longitude', rounding_decimals=6)
+        res = em.transform(sample_gps_data[-3:])
+        assert len(res) == 3
+        assert res['elevation'].isin([130, 200, 145]).all()
+

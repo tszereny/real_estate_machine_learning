@@ -6,9 +6,11 @@ import pandas as pd, numpy as np
 import os
 
 
+IS_TEST_SKIPPED = True
+FIXTURE_DIR = 'tests/fixtures/'
+
 @pytest.fixture(scope='session')
 def real_estate_data():
-    FIXTURE_DIR = '../fixtures/'
     DATA_FNAME = 'sample.csv'
     red = RealEstateData(FIXTURE_DIR, DATA_FNAME)
     return red

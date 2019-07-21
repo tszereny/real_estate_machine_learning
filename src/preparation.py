@@ -74,6 +74,7 @@ class Elevation:
             result = pd.concat([result, batch], axis=0)
         return result.reset_index(drop=True)
 
+
 class OSM:
 
     def __init__(self, query):
@@ -104,11 +105,12 @@ class OSM:
                     data.append(node)
         df = pd.DataFrame(data, columns=node_attrs + add_tags)
         return df
-    
+
+
 def get_coordinates_from(geojson):
     rows = []
     for feat in geojson['features']:
-        nodes=feat['geometry']['coordinates']
+        nodes = feat['geometry']['coordinates']
         for node in nodes:
             if len(node) > 2:
                 for r in node:
@@ -117,12 +119,14 @@ def get_coordinates_from(geojson):
                 rows.append(node)
     return pd.DataFrame(rows, columns=['lng', 'lat'])
 
+
 def get_public_domain_names():
     URL = 'https://ceginformaciosszolgalat.kormany.hu/download/b/46/11000/kozterulet_jelleg_2015_09_07.txt'
     response = urllib.request.urlopen(URL)
     txt = response.read()
     decoded_txt = txt.decode(encoding='utf-8-sig')
     return decoded_txt
+
 
 def load_public_domain_names(txt_path):
     txt = read_txt(txt_path, encoding = None)

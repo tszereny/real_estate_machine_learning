@@ -54,7 +54,8 @@ class StringStandardizer(BaseTransformer):
     def transform(self, X):
         X = X.copy()
         self.column_names = self.get_string_columns(X)
-        return X[self.column_names].apply(self.func)
+        X[self.column_names] = X[self.column_names].apply(self.func)
+        return X
 
 
 class DuplicatesRemoval(BaseTransformer):
@@ -70,32 +71,40 @@ class DuplicatesRemoval(BaseTransformer):
 
 class ElevationMerger(BaseTransformer):
 
-    def __init__(self, left_longitude: str, left_latitude: str, elevation_data_path: str, elevation_longitude: str, elevation_latitude: str, mode: str = 'w'):
+    def __init__(self, left_longitude: str, left_latitude: str, elevation_data_path: str, elevation_longitude: str,
+                 elevation_latitude: str, rounding_decimals=16, mode: str = 'w'):
         self.left_longitude = left_longitude
         self.left_latitude = left_latitude
         self.elevation_data_path = elevation_data_path
         self.elevation_longitude = elevation_longitude
         self.elevation_latitude = elevation_latitude
+        self.rounding_decimals = rounding_decimals
         self.mode = mode
 
     @property
     def elevation_data(self):
-        return load_elevation_data(self.elevation_data_path)
+        elevation_data = load_elevation_data(self.elevation_data_path)
+        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
+        elevation_data[to_be_rounded] = elevation_data[to_be_rounded].round(decimals=self.rounding_decimals)
+        return elevation_data
 
     def transform(self, X: pd.DataFrame):
         X = X.copy()
+        X[[self.left_longitude, self.left_latitude]] = X[[self.left_longitude, self.left_latitude]].round(
+            decimals=self.rounding_decimals)
         merged = X.merge(how='left', right=self.elevation_data, left_on=[self.left_longitude, self.left_latitude],
                          right_on=[self.elevation_longitude, self.elevation_latitude])
         not_in_elevation_mask = merged[[self.elevation_longitude, self.elevation_latitude]].isnull().any(axis=1)
         not_in_elevation_data = merged[not_in_elevation_mask]
+        print('Not in elevation data: {}'.format(len(not_in_elevation_data)))
         elevation = Elevation(df=not_in_elevation_data, batch_size=100, latitude=self.left_latitude,
                               longitude=self.left_longitude)
         retrieved = elevation.retrieve_to_df()
-        print(self.elevation_data)
-        print(retrieved)
         output = pd.concat([self.elevation_data, retrieved], axis=0)
-        if self.mode == 'w':
+        if self.mode == 'w' and len(retrieved) > 0:
             output.to_csv(self.elevation_data_path, index=False)
+        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
+        output[to_be_rounded] = output[to_be_rounded].round(decimals=self.rounding_decimals)
         return X.merge(how='left', right=output, left_on=[self.left_longitude, self.left_latitude],
                        right_on=[self.elevation_longitude, self.elevation_latitude])
 
@@ -114,23 +123,27 @@ def multiply(func, **kwargs):
         return func(from_string, **kwargs) * multiplier
     return func_wrapper
 
+
 @multiply
 def extract_num(from_string, decimal_sep='.'):
     ''' Extract all numeric values from string '''
     res=[s for s in from_string if s in string.digits or s==decimal_sep]
     num_s=''.join(res).replace(decimal_sep, '.')
     return float(num_s)
-    
+
+
 def test_set_check(identifier, test_ratio):
     if isinstance(identifier, str):
         return crc32(identifier.encode('ascii')) / 0xffffffff < test_ratio
     else:
         return crc32(np.int64(identifier)) / 0xffffffff < test_ratio
 
+
 def split_train_test_by_hash(df, test_ratio, id_column):
     ids = df[id_column]
     in_test_set = ids.apply(lambda id_: test_set_check(id_, test_ratio))
     return df.loc[~in_test_set], df.loc[in_test_set]
+
 
 def calc_outlier_ratio(st_df, columns, n_sigma = 10, sigma_step = 0.25):
     total_records = len(st_df)
@@ -144,7 +157,8 @@ def calc_outlier_ratio(st_df, columns, n_sigma = 10, sigma_step = 0.25):
         ratio = 1 - (filtered_records/total_records)
         ratios.append(ratio*100)
     return np.c_[np.arange(n_sigma, 1, -sigma_step), np.array(ratios)]    
-    
+
+
 def create_outlier_mask(st_df, columns, sigma_threshold = 3):
     total_records = len(st_df)
     outlier_mask = np.array([True] * total_records)
@@ -165,3 +179,25 @@ def get_address_mask(series, public_domains_fn, street_num = True):
         ptrn = '|'.join([ptrn_dot, ptrn_slash_num, ptrn_slash_letter, ptrn_dash])
     mask = series.apply(lambda a: bool(re.match(string=str(a), pattern=ptrn)))
     return mask
+
+
+if __name__ == '__main__':
+    def sample_gps_data():
+        a = np.array([[47.52991, 18.992949],
+                      [47.54727, 19.07117],
+                      [47.51102, 19.07725],
+                      [47.488605, 19.075905],
+                      [47.4746, 18.9899],
+                      [47.42004, 19.0021],
+                      [47.53713, 19.12761],
+                      [47.49086, 19.136728],
+                      [47.47963, 18.992636],
+                      [47.478138, 19.231878]])
+        df = pd.DataFrame(data=a, columns=['lat', 'lng'])
+        return df
+
+    sample_gps_data = sample_gps_data()
+    dummy_elevation_path = 'tests/fixtures/dummy_elevation.csv'
+    em = ElevationMerger(left_latitude='lat', left_longitude='lng', elevation_data_path=dummy_elevation_path,
+                         elevation_latitude='latitude', elevation_longitude='longitude')
+    res = em.transform(sample_gps_data)
