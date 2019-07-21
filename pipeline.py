@@ -30,10 +30,10 @@ LISTING_TYPE_HUN_TO_ENG = {'elado': 'for-sale', 'kiado': 'for-rent'}
 COMPOSITE_ID = ['property_id', 'timestamp']
 TECHNICAL_COLUMNS = ['property_url', 'cluster_id', 'batch_num', 'page_num', 'max_page', 'max_listing', 'is_ad_active']
 
-INPUT_DIR = '../../real_estate_hungary/output/'
+INPUT_DIR = '../real_estate_hungary/output/'
 DATE = '20181101'
 
-ELEVATION_PATH = '../data/ext/dummy_elevation.csv'
+ELEVATION_PATH = './data/ext/elevation.csv'
 ELEVATION_MAP = dict(latitude='latitude', longitude='longitude')
 
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                                           elevation_data_path=ELEVATION_PATH,
                                           elevation_longitude=ELEVATION_MAP['longitude'],
                                           elevation_latitude=ELEVATION_MAP['latitude'],
-                                          rounding_decimals=16, mode='w'))
+                                          rounding_decimals=6, mode='w'))
                          ])
     pro = pipeline.transform(raw)
     print(raw.shape, pro.shape)

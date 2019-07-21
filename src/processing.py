@@ -66,13 +66,18 @@ class DuplicatesRemoval(BaseTransformer):
 
     def transform(self, X):
         columns = X.columns[~X.columns.isin(self.columns)].tolist() if self.negation else self.columns
-        return X.drop_duplicates(subset=columns)
+        unique_X = X.drop_duplicates(subset=columns)
+        total_records = len(X)
+        duplicated_records_ratio = 1 - len(unique_X) / total_records
+        print('Total number of records: {0:,}'.format(total_records))
+        print('Duplicated records are {0:.3%}'.format(duplicated_records_ratio))
+        return unique_X
 
 
 class ElevationMerger(BaseTransformer):
 
     def __init__(self, left_longitude: str, left_latitude: str, elevation_data_path: str, elevation_longitude: str,
-                 elevation_latitude: str, rounding_decimals=16, mode: str = 'w'):
+                 elevation_latitude: str, rounding_decimals=6, mode: str = 'w'):
         self.left_longitude = left_longitude
         self.left_latitude = left_latitude
         self.elevation_data_path = elevation_data_path
@@ -84,15 +89,18 @@ class ElevationMerger(BaseTransformer):
     @property
     def elevation_data(self):
         elevation_data = load_elevation_data(self.elevation_data_path)
-        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
-        elevation_data[to_be_rounded] = elevation_data[to_be_rounded].round(decimals=self.rounding_decimals)
         return elevation_data
+
+    @property
+    def elevation_data_rounded(self):
+        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
+        return self.elevation_data[to_be_rounded].round(decimals=self.rounding_decimals)
 
     def transform(self, X: pd.DataFrame):
         X = X.copy()
         X[[self.left_longitude, self.left_latitude]] = X[[self.left_longitude, self.left_latitude]].round(
             decimals=self.rounding_decimals)
-        merged = X.merge(how='left', right=self.elevation_data, left_on=[self.left_longitude, self.left_latitude],
+        merged = X.merge(how='left', right=self.elevation_data_rounded, left_on=[self.left_longitude, self.left_latitude],
                          right_on=[self.elevation_longitude, self.elevation_latitude])
         not_in_elevation_mask = merged[[self.elevation_longitude, self.elevation_latitude]].isnull().any(axis=1)
         not_in_elevation_data = merged[not_in_elevation_mask]
