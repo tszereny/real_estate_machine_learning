@@ -6,7 +6,7 @@ import os
 from pandas import read_csv
 
 
-def load_elevation_data(file_path: str):
+def load_stored_elevation(file_path: str):
     if os.path.exists(file_path):
         return read_csv(file_path)
     print('file not exist {}'.format(file_path))
@@ -94,7 +94,9 @@ def calc_intervals(ints_n, length):
 
 
 if __name__ == '__main__':
-    DIR = '../../real_estate_hungary/output/'
-    data = RealEstateData(data_dir=DIR, file_name='raw.csv')
-    df = data.read(dir_name='data', date='20180301')
+    # DIR = '../../real_estate_hungary/output/'
+    # data = RealEstateData(data_dir=DIR, file_name='raw.csv')
+    # df = data.read(dir_name='data', date='20180301')
+    ELEVATION_PATH = './data/ext/elevation.csv'
+    df = load_stored_elevation(ELEVATION_PATH)
 

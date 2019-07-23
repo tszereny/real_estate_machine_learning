@@ -3,7 +3,7 @@ import urllib, json
 from urllib.request import HTTPDefaultErrorHandler, HTTPError, URLError
 from http.client import RemoteDisconnected
 import overpy
-from src.utils import read_txt, calc_intervals, load_elevation_data
+from src.utils import read_txt, calc_intervals, load_stored_elevation
 
 
 class Elevation:

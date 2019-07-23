@@ -1,6 +1,6 @@
 from sklearn.pipeline import Pipeline
 from src.processing import *
-from src.utils import RealEstateData, load_elevation_data
+from src.utils import RealEstateData, load_stored_elevation
 
 OLD_TO_NEW = {'data_id': 'property_id', 'description': 'desc',
               'district': 'city_district', 'latitude': 'lat',
@@ -44,7 +44,7 @@ def build_preprocess():
 if __name__ == '__main__':
     real_estate_data = RealEstateData(data_dir=INPUT_DIR, file_name='raw.csv')
     raw = real_estate_data.read(dir_name='data', date=DATE)
-    elevation_data = load_elevation_data(ELEVATION_PATH)
+    elevation_data = load_stored_elevation(ELEVATION_PATH)
     raw_elevation_map = {k:v for k, v in OLD_TO_NEW.items() if k in ELEVATION_MAP.keys()}
 
     pipeline = Pipeline([('column_name_standardisation',
@@ -56,9 +56,9 @@ if __name__ == '__main__':
                          ('add_elevation',
                           ElevationMerger(left_longitude=raw_elevation_map['longitude'],
                                           left_latitude=raw_elevation_map['latitude'],
-                                          elevation_data_path=ELEVATION_PATH,
-                                          elevation_longitude=ELEVATION_MAP['longitude'],
-                                          elevation_latitude=ELEVATION_MAP['latitude'],
+                                          stored_elevation_path=ELEVATION_PATH,
+                                          stored_elevation_longitude=ELEVATION_MAP['longitude'],
+                                          stored_elevation_latitude=ELEVATION_MAP['latitude'],
                                           rounding_decimals=6, mode='w'))
                          ])
     pro = pipeline.transform(raw)

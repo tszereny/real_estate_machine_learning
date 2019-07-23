@@ -6,7 +6,7 @@ from zlib import crc32
 from src.base import BaseTransformer
 from src.preparation import Elevation
 import src.preparation as prep
-from src.utils import load_elevation_data
+from src.utils import load_stored_elevation
 
 
 class ColumnRenamer(BaseTransformer):
@@ -76,45 +76,50 @@ class DuplicatesRemoval(BaseTransformer):
 
 class ElevationMerger(BaseTransformer):
 
-    def __init__(self, left_longitude: str, left_latitude: str, elevation_data_path: str, elevation_longitude: str,
-                 elevation_latitude: str, rounding_decimals=6, mode: str = 'w'):
+    def __init__(self, left_longitude: str, left_latitude: str, stored_elevation_path: str,
+                 stored_elevation_longitude: str,
+                 stored_elevation_latitude: str, rounding_decimals=6, mode: str = 'w'):
         self.left_longitude = left_longitude
         self.left_latitude = left_latitude
-        self.elevation_data_path = elevation_data_path
-        self.elevation_longitude = elevation_longitude
-        self.elevation_latitude = elevation_latitude
+        self.stored_elevation_path = stored_elevation_path
+        self.stored_elevation_longitude = stored_elevation_longitude
+        self.stored_elevation_latitude = stored_elevation_latitude
         self.rounding_decimals = rounding_decimals
         self.mode = mode
 
     @property
-    def elevation_data(self):
-        elevation_data = load_elevation_data(self.elevation_data_path)
-        return elevation_data
+    def stored_elevation(self):
+        stored_elevation = load_stored_elevation(self.stored_elevation_path)
+        return stored_elevation
 
     @property
-    def elevation_data_rounded(self):
-        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
-        return self.elevation_data[to_be_rounded].round(decimals=self.rounding_decimals)
+    def rounded_stored_elevation(self):
+        to_be_rounded = [self.stored_elevation_longitude, self.stored_elevation_latitude]
+        return self.stored_elevation[to_be_rounded].round(decimals=self.rounding_decimals)
+
+    def get_unstored_elevation(self, X: pd.DataFrame):
+        merged_to_rounded_elevation = X.merge(how='left', right=self.rounded_stored_elevation,
+                         left_on=[self.left_longitude, self.left_latitude],
+                         right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
+        unstored_elevation_mask = merged_to_rounded_elevation[[self.stored_elevation_longitude, self.stored_elevation_latitude]].isnull().any(
+            axis=1)
+        unstored_elevation = merged_to_rounded_elevation[unstored_elevation_mask]
+        return unstored_elevation
 
     def transform(self, X: pd.DataFrame):
         X = X.copy()
         X[[self.left_longitude, self.left_latitude]] = X[[self.left_longitude, self.left_latitude]].round(
             decimals=self.rounding_decimals)
-        merged = X.merge(how='left', right=self.elevation_data_rounded, left_on=[self.left_longitude, self.left_latitude],
-                         right_on=[self.elevation_longitude, self.elevation_latitude])
-        not_in_elevation_mask = merged[[self.elevation_longitude, self.elevation_latitude]].isnull().any(axis=1)
-        not_in_elevation_data = merged[not_in_elevation_mask]
-        print('Not in elevation data: {}'.format(len(not_in_elevation_data)))
-        elevation = Elevation(df=not_in_elevation_data, batch_size=100, latitude=self.left_latitude,
-                              longitude=self.left_longitude)
-        retrieved = elevation.retrieve_to_df()
-        output = pd.concat([self.elevation_data, retrieved], axis=0)
-        if self.mode == 'w' and len(retrieved) > 0:
-            output.to_csv(self.elevation_data_path, index=False)
-        to_be_rounded = [self.elevation_longitude, self.elevation_latitude]
-        output[to_be_rounded] = output[to_be_rounded].round(decimals=self.rounding_decimals)
-        return X.merge(how='left', right=output, left_on=[self.left_longitude, self.left_latitude],
-                       right_on=[self.elevation_longitude, self.elevation_latitude])
+        unstored_elevation = self.get_unstored_elevation(X)
+
+        print('Not in elevation data: {}'.format(len(unstored_elevation)))
+        retrieved_unstored_elevation = Elevation(df=unstored_elevation, batch_size=100, latitude=self.left_latitude,
+                                      longitude=self.left_longitude).retrieve_to_df()
+        elevation = pd.concat([self.stored_elevation, retrieved_unstored_elevation], axis=0)
+        if self.mode == 'w' and len(retrieved_unstored_elevation) > 0:
+            elevation.to_csv(self.stored_elevation_path, index=False, float_format='%.6f')
+        return X.merge(how='left', right=elevation, left_on=[self.left_longitude, self.left_latitude],
+                       right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
 
 
 def multiply(func, **kwargs):
@@ -206,6 +211,6 @@ if __name__ == '__main__':
 
     sample_gps_data = sample_gps_data()
     dummy_elevation_path = 'tests/fixtures/dummy_elevation.csv'
-    em = ElevationMerger(left_latitude='lat', left_longitude='lng', elevation_data_path=dummy_elevation_path,
-                         elevation_latitude='latitude', elevation_longitude='longitude')
+    em = ElevationMerger(left_latitude='lat', left_longitude='lng', stored_elevation_path=dummy_elevation_path,
+                         stored_elevation_latitude='latitude', stored_elevation_longitude='longitude')
     res = em.transform(sample_gps_data)
