@@ -52,14 +52,22 @@ if __name__ == '__main__':
                          ('listing_type_translation',
                           Translator(column_name='listing_type', hun_eng_map=LISTING_TYPE_HUN_TO_ENG)),
                          ('to_lower_case', StringStandardizer(func=lambda s: s.str.lower())),
-                         ('drop_duplicates', DuplicatesRemoval(negation=True, columns=COMPOSITE_ID + TECHNICAL_COLUMNS)),
+                         ('drop_duplicates',
+                          DuplicatesRemoval(is_columns_negated=True, columns=COMPOSITE_ID + TECHNICAL_COLUMNS)),
                          ('add_elevation',
                           ElevationMerger(left_longitude=raw_elevation_map['longitude'],
                                           left_latitude=raw_elevation_map['latitude'],
                                           stored_elevation_path=ELEVATION_PATH,
                                           stored_elevation_longitude=ELEVATION_MAP['longitude'],
                                           stored_elevation_latitude=ELEVATION_MAP['latitude'],
-                                          rounding_decimals=6, mode='w'))
+                                          rounding_decimals=6, mode='w')),
+                         # new feature: elevation
+                         ('drop_duplicated_columns',
+                          DropColumns(columns=[ELEVATION_MAP['longitude'], ELEVATION_MAP['latitude']])),
+                         ('create_id',
+                          IdCreator(columns=['property_id', 'timestamp'], date_format='%Y-%m-%d %H:%M:%S.%f',
+                                    id_column_name='id'))
+
                          ])
     pro = pipeline.transform(raw)
     print(raw.shape, pro.shape)

@@ -1,5 +1,6 @@
 from typing import List, Callable, Union
 import re
+from datetime import datetime
 import pandas as pd, numpy as np
 import string
 from zlib import crc32
@@ -60,13 +61,19 @@ class StringStandardizer(BaseTransformer):
 
 class DuplicatesRemoval(BaseTransformer):
 
-    def __init__(self, columns, negation=False):
+    def __init__(self, columns: List[str], is_columns_negated: bool = False):
         self.columns = columns
-        self.negation = negation
+        self.is_columns_negated = is_columns_negated
+
+
+    def get_to_be_modified_columns(self, X):
+        if self.is_columns_negated:
+            return X.columns[~X.columns.isin(self.columns)].tolist()
+        return self.columns
 
     def transform(self, X):
-        columns = X.columns[~X.columns.isin(self.columns)].tolist() if self.negation else self.columns
-        unique_X = X.drop_duplicates(subset=columns)
+        to_be_modified_columns = self.get_to_be_modified_columns(X)
+        unique_X = X.drop_duplicates(subset=to_be_modified_columns)
         total_records = len(X)
         duplicated_records_ratio = 1 - len(unique_X) / total_records
         print('Total number of records: {0:,}'.format(total_records))
@@ -120,6 +127,47 @@ class ElevationMerger(BaseTransformer):
             elevation.to_csv(self.stored_elevation_path, index=False, float_format='%.6f')
         return X.merge(how='left', right=elevation, left_on=[self.left_longitude, self.left_latitude],
                        right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
+
+
+class DropColumns(BaseTransformer):
+
+    def __init__(self, columns: List[str], is_columns_negated: bool = False):
+        self.columns = columns
+        self.is_columns_negated = is_columns_negated
+
+    def get_to_be_modified_columns(self, X):
+        if self.is_columns_negated:
+            return X.columns[~X.columns.isin(self.columns)].tolist()
+        return self.columns
+
+    def transform(self, X):
+        to_be_modified_columns = self.get_to_be_modified_columns(X)
+        return X.drop(columns=to_be_modified_columns)
+
+
+class IdCreator(BaseTransformer):
+
+    def __init__(self, columns: List[str], date_format: str = '%Y-%m-%d %H:%M:%S.%f', id_column_name: str = 'id'):
+        self.columns = columns
+        self.date_format = date_format
+        self.id_column_name = id_column_name
+
+    def get_numeric_columns(self, X):
+        return [c for c in self.columns if pd.api.types.is_numeric_dtype(X[c])]
+
+    def get_str_columns(self, X):
+        return [c for c in self.columns if pd.api.types.is_string_dtype(X[c])]
+
+    def transform(self, X):
+        X[self.id_column_name] = 0
+        numeric_columns = self.get_numeric_columns(X)
+        str_columns = self.get_str_columns(X)
+        for c in numeric_columns:
+            X[self.id_column_name] = X[self.id_column_name] + X[c]
+        for c in str_columns:
+            X[self.id_column_name] = X[self.id_column_name] + X[c].apply(
+                lambda ts: datetime.strptime(ts, self.date_format).timestamp())
+        return X
 
 
 def multiply(func, **kwargs):
