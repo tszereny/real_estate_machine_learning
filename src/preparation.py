@@ -5,7 +5,6 @@ from http.client import RemoteDisconnected
 import overpy
 from src.utils import read_txt, calc_intervals, load_stored_elevation
 
-
 class Elevation:
     HEADERS = {'content-type': 'application/json', 'accept': 'application/json'}
     API = 'https://api.open-elevation.com/api/v1/lookup'

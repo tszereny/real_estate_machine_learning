@@ -7,7 +7,7 @@ from zlib import crc32
 from src.base import BaseTransformer
 from src.preparation import Elevation
 import src.preparation as prep
-from src.utils import load_stored_elevation
+from src.utils import load_stored_elevation, store_elevation
 
 
 class ColumnRenamer(BaseTransformer):
@@ -102,7 +102,10 @@ class ElevationMerger(BaseTransformer):
     @property
     def rounded_stored_elevation(self):
         to_be_rounded = [self.stored_elevation_longitude, self.stored_elevation_latitude]
-        return self.stored_elevation[to_be_rounded].round(decimals=self.rounding_decimals)
+        rounded_stored_elevation = self.stored_elevation.copy()
+        rounded_stored_elevation[to_be_rounded] = self.stored_elevation[to_be_rounded].round(
+            decimals=self.rounding_decimals)
+        return rounded_stored_elevation
 
     def get_unstored_elevation(self, X: pd.DataFrame):
         merged_to_rounded_elevation = X.merge(how='left', right=self.rounded_stored_elevation,
@@ -122,9 +125,9 @@ class ElevationMerger(BaseTransformer):
         print('Not in elevation data: {}'.format(len(unstored_elevation)))
         retrieved_unstored_elevation = Elevation(df=unstored_elevation, batch_size=100, latitude=self.left_latitude,
                                       longitude=self.left_longitude).retrieve_to_df()
-        elevation = pd.concat([self.stored_elevation, retrieved_unstored_elevation], axis=0)
+        elevation = pd.concat([self.rounded_stored_elevation, retrieved_unstored_elevation], axis=0)
         if self.mode == 'w' and len(retrieved_unstored_elevation) > 0:
-            elevation.to_csv(self.stored_elevation_path, index=False, float_format='%.6f')
+            store_elevation(elevation=elevation, file_path=self.stored_elevation_path)
         return X.merge(how='left', right=elevation, left_on=[self.left_longitude, self.left_latitude],
                        right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
 

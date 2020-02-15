@@ -8,9 +8,13 @@ from pandas import read_csv
 
 def load_stored_elevation(file_path: str):
     if os.path.exists(file_path):
-        return read_csv(file_path)
+        return read_csv(file_path, float_precision='%.6f')
     print('file not exist {}'.format(file_path))
     return pd.DataFrame({'elevation': [], 'longitude': [], 'latitude': []})
+
+
+def store_elevation(elevation: pd.DataFrame, file_path: str):
+    elevation.to_csv(file_path, index=False, float_format='%.6f')
 
 
 class RealEstateData:
