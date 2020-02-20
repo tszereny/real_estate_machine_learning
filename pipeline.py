@@ -61,13 +61,21 @@ if __name__ == '__main__':
                                           stored_elevation_longitude=ELEVATION_MAP['longitude'],
                                           stored_elevation_latitude=ELEVATION_MAP['latitude'],
                                           rounding_decimals=6, mode='w')),
+			 # TODO: make two steps from ElevationMerger -> 1. Updating the elevation file 2. Merging it to the dataset
                          # new feature: elevation
                          ('drop_duplicated_columns',
                           DropColumns(columns=[ELEVATION_MAP['longitude'], ELEVATION_MAP['latitude']])),
                          ('create_id',
-                          IdCreator(columns=['property_id', 'timestamp'], date_format='%Y-%m-%d %H:%M:%S.%f',
-                                    id_column_name='id'))
-
+                          IdCreator(columns=COMPOSITE_ID, date_format='%Y-%m-%d %H:%M:%S.%f',
+                                    id_column_name='id')),
+			('price_to_number', FunctionApplier(function=lambda x: extract_num(from_string=x, thousand_eq='ezer', million_eq='millió', billion_eq='milliárd'), columns=['price_in_huf'], new_columns=['price_in_huf'])),
+			('area_to_number', FunctionApplier(function=lambda x: extract_num(from_string=x), columns=['area_size'], new_columns=['area_size'])),
+			('room_to_lt_12_sqm', FunctionApplier(function=lambda x: extract_num(x.split('+')[1]) if '+' in x else 0), columns=['room'], new_columns=['room_lt_12_sqm'])),
+			('room_to_ge_12_sqm', FunctionApplier(function=lambda x: extract_num(x.split('+')[0]), columns=['room'], new_columns=['room_ge_12_sqm'])),
+			('sum_of_rooms', ColumnAdder(left_columns=['room_ge_12_sqm'], right_columns=['room_lt_12_sqm'], new_columns=['room_total'])),
+			('balcony_to_number', FunctionApplier(function=lambda x: extract_num(from_string=x) if isintance(x, str) else x, columns=['balcony'], new_columns=['balcony'])),
+			# TODO: rework extact_num to handle Nan-s and add tests u_raw['balcony'] = u_raw.loc[u_raw.balcony.notnull(), 'balcony'].apply(extract_num)
                          ])
     pro = pipeline.transform(raw)
     print(raw.shape, pro.shape)
+

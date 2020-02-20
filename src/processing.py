@@ -1,5 +1,6 @@
 from typing import List, Callable, Union
 import re
+import logging
 from datetime import datetime
 import pandas as pd, numpy as np
 import string
@@ -171,6 +172,36 @@ class IdCreator(BaseTransformer):
             X[self.id_column_name] = X[self.id_column_name] + X[c].apply(
                 lambda ts: datetime.strptime(ts, self.date_format).timestamp())
         return X
+
+
+class FunctionApplier(BaseTransformer):
+
+    def __init__(self, function: Callable, columns: List[str], new_columns: List[str]):
+	self.function = function
+	self.columns = columns
+	self.new_columns = new_columns
+
+    def transform(self, X):
+	output = X.copy()
+	for col, new_col in zip(self.columns, self.new_columns):
+	    if col == new_col:
+	        logging.warning('%s is being overwritten', col)
+	    output[new_col] = output[col].apply(function)
+	return output
+
+
+class ColumnAdder(BaseTransformer):
+
+    def __init__(self, left_columns: List[str], right_columns[str], new_columns[str]):
+	self.left_columns = left_columns
+	self.right_columns = right_columns
+	self.new_columns = new_columns
+
+    def transform(self, X):
+	output = X.copy()
+	for left, right, new_col in zip(self.left_columns, self.right_columns, self.new_columns):
+	    output[new_col] = output[left] + output[right]
+	return output
 
 
 def multiply(func, **kwargs):
