@@ -1,4 +1,4 @@
-from typing import List, Callable, Union
+from typing import Any, List, Callable, Union
 import re
 import logging
 from datetime import datetime
@@ -86,14 +86,13 @@ class ElevationMerger(BaseTransformer):
 
     def __init__(self, left_longitude: str, left_latitude: str, stored_elevation_path: str,
                  stored_elevation_longitude: str,
-                 stored_elevation_latitude: str, rounding_decimals=6, mode: str = 'w'):
+                 stored_elevation_latitude: str, rounding_decimals=6):
         self.left_longitude = left_longitude
         self.left_latitude = left_latitude
         self.stored_elevation_path = stored_elevation_path
         self.stored_elevation_longitude = stored_elevation_longitude
         self.stored_elevation_latitude = stored_elevation_latitude
         self.rounding_decimals = rounding_decimals
-        self.mode = mode
 
     @property
     def stored_elevation(self):
@@ -107,6 +106,23 @@ class ElevationMerger(BaseTransformer):
         rounded_stored_elevation[to_be_rounded] = self.stored_elevation[to_be_rounded].round(
             decimals=self.rounding_decimals)
         return rounded_stored_elevation
+
+    def transform(self, X: pd.DataFrame):
+        X = X.copy()
+        return X.merge(how='left', right=self.rounded_stored_elevation, left_on=[self.left_longitude, self.left_latitude],
+                       right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
+
+
+class ElevationInserter(ElevationMerger):
+
+    def __init__(self, left_longitude: str, left_latitude: str, stored_elevation_path: str,
+                 stored_elevation_longitude: str,
+                 stored_elevation_latitude: str, rounding_decimals=6, mode: str = 'w'):
+        self.mode = mode
+        super().__init__(left_longitude=left_longitude, left_latitude=left_latitude,
+                         stored_elevation_path=stored_elevation_path,
+                         stored_elevation_longitude=stored_elevation_longitude,
+                         stored_elevation_latitude=stored_elevation_latitude, rounding_decimals=rounding_decimals)
 
     def get_unstored_elevation(self, X: pd.DataFrame):
         merged_to_rounded_elevation = X.merge(how='left', right=self.rounded_stored_elevation,
@@ -123,14 +139,12 @@ class ElevationMerger(BaseTransformer):
             decimals=self.rounding_decimals)
         unstored_elevation = self.get_unstored_elevation(X)
 
-        print('Not in elevation data: {}'.format(len(unstored_elevation)))
+        logging.info('Not in elevation data: %s', len(unstored_elevation))
         retrieved_unstored_elevation = Elevation(df=unstored_elevation, batch_size=100, latitude=self.left_latitude,
                                       longitude=self.left_longitude).retrieve_to_df()
         elevation = pd.concat([self.rounded_stored_elevation, retrieved_unstored_elevation], axis=0)
         if self.mode == 'w' and len(retrieved_unstored_elevation) > 0:
             store_elevation(elevation=elevation, file_path=self.stored_elevation_path)
-        return X.merge(how='left', right=elevation, left_on=[self.left_longitude, self.left_latitude],
-                       right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
 
 
 class DropColumns(BaseTransformer):
@@ -177,31 +191,31 @@ class IdCreator(BaseTransformer):
 class FunctionApplier(BaseTransformer):
 
     def __init__(self, function: Callable, columns: List[str], new_columns: List[str]):
-	self.function = function
-	self.columns = columns
-	self.new_columns = new_columns
+        self.function = function
+        self.columns = columns
+        self.new_columns = new_columns
 
     def transform(self, X):
-	output = X.copy()
-	for col, new_col in zip(self.columns, self.new_columns):
-	    if col == new_col:
-	        logging.warning('%s is being overwritten', col)
-	    output[new_col] = output[col].apply(function)
-	return output
+        output = X.copy()
+        for col, new_col in zip(self.columns, self.new_columns):
+            if col == new_col:
+                logging.warning('%s is being overwritten', col)
+            output[new_col] = output[col].apply(self.function)
+        return output
 
 
 class ColumnAdder(BaseTransformer):
 
-    def __init__(self, left_columns: List[str], right_columns[str], new_columns[str]):
-	self.left_columns = left_columns
-	self.right_columns = right_columns
-	self.new_columns = new_columns
+    def __init__(self, left_columns: List[str], right_columns: List[str], new_columns: List[str]):
+        self.left_columns = left_columns
+        self.right_columns = right_columns
+        self.new_columns = new_columns
 
     def transform(self, X):
-	output = X.copy()
-	for left, right, new_col in zip(self.left_columns, self.right_columns, self.new_columns):
-	    output[new_col] = output[left] + output[right]
-	return output
+        output = X.copy()
+        for left, right, new_col in zip(self.left_columns, self.right_columns, self.new_columns):
+            output[new_col] = output[left] + output[right]
+        return output
 
 
 def multiply(func, **kwargs):
@@ -219,15 +233,91 @@ def multiply(func, **kwargs):
     return func_wrapper
 
 
-@multiply
-def extract_num(from_string, decimal_sep='.'):
-    ''' Extract all numeric values from string '''
-    res=[s for s in from_string if s in string.digits or s==decimal_sep]
-    num_s=''.join(res).replace(decimal_sep, '.')
-    return float(num_s)
+def get_multiplier(from_string: str, thousand_eq: str = None, million_eq: str = None, billion_eq: str = None,
+                    thousand_mlpr: float = 1e3, million_mlpr: float = 1e6, billion_mlpr: float = 1e9) -> float:
+    """
+    Extract multiplier number based on the multiplier literal in given string.
+    Parameters
+    ----------
+    from_string: str
+        String, which contains multiplier literal
+    thousand_eq: str, optional
+        Thousand literal
+    million_eq: str, optional
+        Million literal
+    billion_eq: str, optional
+        Billion literal
+    thousand_mlpr: float, optional
+        Thousand multiplier
+    million_mlpr: float, optional
+        Million multiplier
+    billion_mlpr: float, optional
+        Billion multiplier
+
+    Returns
+    -------
+        Multiplier number
+    """
+    from_string = str(from_string)
+    if billion_eq and billion_eq in from_string:
+        multiplier = billion_mlpr
+    elif million_eq and million_eq in from_string:
+        multiplier = million_mlpr
+    elif thousand_eq and thousand_eq in from_string:
+        multiplier = thousand_mlpr
+    else:
+        multiplier = 1
+    return multiplier
 
 
-def test_set_check(identifier, test_ratio):
+def is_str(input: Any) -> bool:
+    """
+    Checks, whether input is a string.
+    Parameters
+    ----------
+    input
+        Input, which should be tested.
+
+    Returns
+    -------
+    Bool, True if it is string, False it is not a string
+
+    """
+    if not isinstance(input, str):
+        if pd.isna(input):
+            logging.debug('%s is not a string, but not number', input)
+        else:
+            logging.warning('%s is not a string', input)
+        return False
+    return True
+
+
+def extract_num(from_string: Any, decimal_sep: str = '.', thousand_eq: str = None, million_eq: str = None,
+                billion_eq: str = None, thousand_mlpr: float = 1e3, million_mlpr: float = 1e6,
+                billion_mlpr: float = 1e9) -> Union[float, Any]:
+    """
+    Extract number from a string.
+    Parameters
+    ----------
+    from_string: str
+        String, which contains number
+    decimal_sep: str, optional
+        Decimal separator, by default using '.'
+    Returns
+    -------
+        Float number from the string
+    """
+    if is_str(from_string):
+        multiplier = get_multiplier(from_string, thousand_eq=thousand_eq, million_eq=million_eq, billion_eq=billion_eq,
+                                    thousand_mlpr=thousand_mlpr, million_mlpr=million_mlpr, billion_mlpr=billion_mlpr)
+        res = [s for s in from_string if s in string.digits or s == decimal_sep]
+        num_s = ''.join(res).replace(decimal_sep, '.')
+        return float(num_s) * multiplier
+    else:
+        return from_string
+
+
+def check_test_set(identifier, test_ratio):
     if isinstance(identifier, str):
         return crc32(identifier.encode('ascii')) / 0xffffffff < test_ratio
     else:
@@ -236,7 +326,7 @@ def test_set_check(identifier, test_ratio):
 
 def split_train_test_by_hash(df, test_ratio, id_column):
     ids = df[id_column]
-    in_test_set = ids.apply(lambda id_: test_set_check(id_, test_ratio))
+    in_test_set = ids.apply(lambda id_: check_test_set(id_, test_ratio))
     return df.loc[~in_test_set], df.loc[in_test_set]
 
 
