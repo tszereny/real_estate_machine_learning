@@ -1,4 +1,5 @@
 from sklearn.pipeline import Pipeline
+from src.base import SlicedPipeline
 from src.processing import *
 from src.utils import RealEstateData, load_stored_elevation
 
@@ -45,9 +46,9 @@ if __name__ == '__main__':
     real_estate_data = RealEstateData(data_dir=INPUT_DIR, file_name='raw.csv')
     raw = real_estate_data.read(dir_name='data', date=DATE)
     elevation_data = load_stored_elevation(ELEVATION_PATH)
-    raw_elevation_map = {k:v for k, v in OLD_TO_NEW.items() if k in ELEVATION_MAP.keys()}
+    raw_elevation_map = {k: v for k, v in OLD_TO_NEW.items() if k in ELEVATION_MAP.keys()}
 
-    pipeline = Pipeline([('column_name_standardisation',
+    pipeline = SlicedPipeline(stop_step=None, steps=[('column_name_standardisation',
                           ColumnRenamer(old_to_new=OLD_TO_NEW, hun_to_eng=HUN_TO_ENG)),
                          ('listing_type_translation',
                           Translator(column_name='listing_type', hun_eng_map=LISTING_TYPE_HUN_TO_ENG)),

@@ -1,3 +1,4 @@
+import logging
 import numpy as np, pandas as pd
 import json
 import smtplib, ssl, getpass
@@ -9,7 +10,7 @@ from pandas import read_csv
 def load_stored_elevation(file_path: str):
     if os.path.exists(file_path):
         return read_csv(file_path, float_precision='%.6f')
-    print('file not exist {}'.format(file_path))
+    logging.warning('file not exist {}, empty Dataframe initialized'.format(file_path))
     return pd.DataFrame({'elevation': [], 'longitude': [], 'latitude': []})
 
 
@@ -83,9 +84,10 @@ def load_pkl(pkl_path):
     return obj
 
 
-def calc_intervals(ints_n, length):
+def generate_intervals(ints_n, length):
     r = []
     strt = 0
+    stp = 0
     for i in range(ints_n):
         if i == ints_n - 1:
             stp = strt + (length - stp)

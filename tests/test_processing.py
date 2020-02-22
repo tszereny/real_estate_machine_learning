@@ -46,18 +46,19 @@ class TestTranslator:
         assert translated_listing_type.apply(lambda s: s not in ('elado', 'kiado')).all() == True
 
 
-class TestElevation:
+class TestElevationTransformers:
 
-    @pytest.mark.skipif(IS_TEST_SKIPPED, reason='slow test')
     def test_retrieving(self, sample_gps_data):
         dummy_elevation_path = 'tests/fixtures/not_existing_elevation_data.csv'
         em = ElevationInserter(left_latitude='lat', left_longitude='lng', stored_elevation_path=dummy_elevation_path,
                              stored_elevation_latitude='latitude', stored_elevation_longitude='longitude')
-        res = em.transform(sample_gps_data[-3:])
+        em.transform(sample_gps_data[-3:])
+        stored_elevation = pd.read_csv(dummy_elevation_path)
+        stored_elevation['elevation'] = stored_elevation['elevation'].apply(int)
+        assert len(stored_elevation) == 3
+        assert stored_elevation['elevation'].isin([131, 207, 148]).all()
         if os.path.exists(dummy_elevation_path):
             os.remove(dummy_elevation_path)
-        assert len(res) == 3
-        assert res['elevation'].isin([130, 200, 145]).all()
 
     def test_merging(self, sample_gps_data):
         dummy_elevation_path = 'tests/fixtures/dummy_elevation.csv'

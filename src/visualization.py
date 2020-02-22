@@ -5,7 +5,7 @@ from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objs as go
 import plotly as py
-from src.utils import calc_intervals
+from src.utils import generate_intervals
 
 def calc_fig_size(pic_ratio, multiplier=2):
     width=10*multiplier
@@ -28,7 +28,7 @@ def plot_na_ratio(df, grouping, subplot_n=2,  dest_dir='.'):
     groups=na_total_ratio.index.tolist()
     sorted_df=na_total_ratio.T.sort_values(groups, ascending=True)
     col_names=sorted_df.index.tolist()
-    ints=calc_intervals(subplot_n, len(col_names))
+    ints=generate_intervals(subplot_n, len(col_names))
     fig, axs = plt.subplots(subplot_n)
     fig.suptitle(title, fontsize=20, weight=10, y=0.93)
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.6)

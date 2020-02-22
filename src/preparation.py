@@ -1,21 +1,72 @@
+from typing import List
+import logging
+logging.basicConfig(level=logging.DEBUG)
+from functools import wraps
+import time
 import pandas as pd, numpy as np
-import urllib, json
-from urllib.request import HTTPDefaultErrorHandler, HTTPError, URLError
+import json
+import requests
+from requests.exceptions import RequestException
 from http.client import RemoteDisconnected
 import overpy
-from src.utils import read_txt, calc_intervals, load_stored_elevation
+from src.utils import read_txt, generate_intervals, load_stored_elevation
+
+
+def retry(delay=5, retries=3, exception=Exception):
+    def retry_decorator(f):
+        @wraps(f)
+        def f_retry(*args, **kwargs):
+            opt_dict = {'retries': retries, 'delay': delay}
+            while opt_dict['retries'] > 1:
+                try:
+                    return f(*args, **kwargs)
+                except exception as e:
+                    logging.debug('Exception: %s, Retrying in %d seconds...', e, delay)
+                    time.sleep(opt_dict['delay'])
+                    opt_dict['retries'] -= 1
+            return f(*args, **kwargs)
+        return f_retry
+
+    return retry_decorator
+
+
+@retry(delay=5, retries=5, exception=RequestException)
+def get_open_elevation(latitude: float, longitude: float):
+    TIMEOUT = 200
+    API_ENDPOINT = 'https://api.open-elevation.com/api/v1/lookup'
+    HEADERS = {'content-type': 'application/json', 'accept': 'application/json'}
+    params = [{'locations': [{'latitude': latitude, 'longitude': longitude}]}]
+    response = requests.post(url=API_ENDPOINT, timeout=TIMEOUT, data=json.dumps(params), headers=HEADERS)
+    j = response.json()
+    return pd.DataFrame(j['results'])
+
+
+@retry(delay=5, retries=3, exception=RequestException)
+def get_open_topo_elevation(latitude_list: List[float], longitude_list: List[float], timeout: int = 200):
+    MAX_BATCH_SIZE = 100
+    all_locations = [f'{lat},{long}' for lat, long in zip(latitude_list, longitude_list)]
+    n_batches = int(np.ceil(len(all_locations) / MAX_BATCH_SIZE))
+    intervals = generate_intervals(n_batches, len(all_locations))
+    results = []
+    for interval in intervals:
+        locations = all_locations[interval.start:interval.stop]
+        locations_formatted = '|'.join(locations)
+        API_ENDPOINT = f'https://api.opentopodata.org/v1/eudem25m?locations={locations_formatted}'
+        response = requests.get(url=API_ENDPOINT, timeout=timeout)
+        if not response.ok:
+            raise RequestException(response.reason)
+        j = response.json()
+        results.extend(j['results'])
+    return results
+
 
 class Elevation:
-    HEADERS = {'content-type': 'application/json', 'accept': 'application/json'}
-    API = 'https://api.open-elevation.com/api/v1/lookup'
 
-    def __init__(self, df, latitude, longitude, batch_size=None, use_only_unique=True):
-        self.only_unique = use_only_unique
-        self.latitude = latitude
-        self.longitude = longitude
+    def __init__(self, df: pd.DataFrame, latitude_alias: str, longitude_alias: str, use_only_unique: bool = True):
+        self.use_only_unique = use_only_unique
+        self.latitude_alias = latitude_alias
+        self.longitude_alias = longitude_alias
         self.df = df
-        self.batch_size = len(self.df) if batch_size is None else batch_size
-        self.dfs = [df[interval.start:interval.stop] for interval in self.batch_intervals]
 
     @property
     def df(self):
@@ -23,55 +74,17 @@ class Elevation:
 
     @df.setter
     def df(self, df):
-        self._df = df[[self.latitude, self.longitude]].drop_duplicates().reset_index(drop=True)
-        print('Total number of unique GPS coordinates: {0:,}'.format(len(self._df)))
+        if self.use_only_unique:
+            self._df = df[[self.latitude_alias, self.longitude_alias]].drop_duplicates().reset_index(drop=True)
+        else:
+            self._df = df
+        logging.info('Total number of unique GPS coordinates: %d', len(self._df))
 
-    @property
-    def n_batches(self):
-        n_batches = int(np.ceil(len(self.df)/self.batch_size))
-        return n_batches
-    
-    @property
-    def batch_intervals(self):
-        intervals = calc_intervals(self.n_batches, len(self.df)) if self.n_batches > 1 else [range(0, len(self.df))]
-        return intervals
-        
-    @property
-    def locations_params(self):
-        params = [{'locations':[{'latitude': r[self.latitude], 'longitude': r[self.longitude]} for i, r in df[[self.latitude, self.longitude]].iterrows()]} for df in self.dfs]
-        return params
-    
-    @property
-    def json_params(self):
-        params_json = [json.dumps(lp).encode('utf8') for lp in self.locations_params]
-        return params_json
-        
-    def _retrieve_to_df(self, timeout=200, batch_idx=0):
-        req = urllib.request.Request(url=self.API, method='POST', data=self.json_params[batch_idx], headers=self.HEADERS)
-        response_stream = urllib.request.urlopen(req, timeout=timeout)
-        response = response_stream.read()
-        response_stream.close()
-        parsed_response = json.loads(response.decode('utf8'))
-        return pd.DataFrame(parsed_response['results'])
-    
     def retrieve_to_df(self):
-        result = pd.DataFrame()
-        for b in range(self.n_batches):
-            while True:
-                batch = None
-                try:
-                    batch = self._retrieve_to_df(batch_idx=b)
-                    print('{}. success - batch retrieved!'. format(b + 1))
-                except HTTPError as err:
-                    pass
-                except URLError as err:
-                    pass
-                except RemoteDisconnected as err:
-                    pass
-                if batch is not None:
-                    break
-            result = pd.concat([result, batch], axis=0)
-        return result.reset_index(drop=True)
+        latitude, longitude = self.df[self.latitude_alias].tolist(), self.df[self.longitude_alias].tolist()
+        data = get_open_topo_elevation(latitude_list=latitude, longitude_list=longitude)
+        elevation = [d['elevation'] for d in data]
+        return pd.DataFrame({'elevation': elevation, 'latitude': latitude, 'longitude': longitude}).reset_index(drop=True)
 
 
 class OSM:
@@ -121,12 +134,44 @@ def get_coordinates_from(geojson):
 
 def get_public_domain_names():
     URL = 'https://ceginformaciosszolgalat.kormany.hu/download/b/46/11000/kozterulet_jelleg_2015_09_07.txt'
-    response = urllib.request.urlopen(URL)
+    response = requests.get(URL)
     txt = response.read()
     decoded_txt = txt.decode(encoding='utf-8-sig')
     return decoded_txt
 
 
 def load_public_domain_names(txt_path):
-    txt = read_txt(txt_path, encoding = None)
+    txt = read_txt(txt_path, encoding=None)
     return [line for line in txt.split('\n') if len(line)>0]
+
+
+if __name__ == '__main__':
+    def sample_gps_data():
+        a = np.array([[47.52991, 18.992949],
+                      [47.54727, 19.07117],
+                      [47.51102, 19.07725],
+                      [47.488605, 19.075905],
+                      [47.4746, 18.9899],
+                      [47.42004, 19.0021],
+                      [47.53713, 19.12761],
+                      [47.49086, 19.136728],
+                      [47.47963, 18.992636],
+                      [47.478138, 19.231878]])
+        df = pd.DataFrame(data=a, columns=['lat', 'lng'])
+        return df
+
+    a = np.array([[47.52991, 18.992949],
+                  [47.54727, 19.07117],
+                  [47.51102, 19.07725],
+                  [47.488605, 19.075905],
+                  [47.4746, 18.9899],
+                  [47.42004, 19.0021],
+                  [47.53713, 19.12761],
+                  [47.49086, 19.136728],
+                  [47.47963, 18.992636],
+                  [47.478138, 19.231878]])
+
+    t = get_open_topo_elevation(latitude_list=a[:, 0].tolist(), longitude_list=a[:, 1].tolist())
+    # elevation = Elevation(df=sample_gps_data(), latitude_alias='lat', longitude_alias='lng')
+    # result = elevation.retrieve_to_df()
+

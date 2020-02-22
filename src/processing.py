@@ -76,9 +76,11 @@ class DuplicatesRemoval(BaseTransformer):
         to_be_modified_columns = self.get_to_be_modified_columns(X)
         unique_X = X.drop_duplicates(subset=to_be_modified_columns)
         total_records = len(X)
-        duplicated_records_ratio = 1 - len(unique_X) / total_records
-        print('Total number of records: {0:,}'.format(total_records))
-        print('Duplicated records are {0:.3%}'.format(duplicated_records_ratio))
+        duplicated_records = total_records - len(unique_X)
+        duplicated_records_ratio = duplicated_records / total_records
+        logging.info('Total number of records: {0:,}'.format(total_records))
+        logging.info('Duplicated records are {0:,} - {1:.1%} of total records, remaining records: {2:,}'.format(
+            duplicated_records, duplicated_records_ratio, total_records - duplicated_records))
         return unique_X
 
 
@@ -134,17 +136,17 @@ class ElevationInserter(ElevationMerger):
         return unstored_elevation
 
     def transform(self, X: pd.DataFrame):
-        X = X.copy()
-        X[[self.left_longitude, self.left_latitude]] = X[[self.left_longitude, self.left_latitude]].round(
+        output = X.copy()
+        output[[self.left_longitude, self.left_latitude]] = output[[self.left_longitude, self.left_latitude]].round(
             decimals=self.rounding_decimals)
-        unstored_elevation = self.get_unstored_elevation(X)
-
+        unstored_elevation = self.get_unstored_elevation(output)
         logging.info('Not in elevation data: %s', len(unstored_elevation))
-        retrieved_unstored_elevation = Elevation(df=unstored_elevation, batch_size=100, latitude=self.left_latitude,
-                                      longitude=self.left_longitude).retrieve_to_df()
+        retrieved_unstored_elevation = Elevation(df=unstored_elevation, latitude_alias=self.left_latitude,
+                                                 longitude_alias=self.left_longitude).retrieve_to_df()
         elevation = pd.concat([self.rounded_stored_elevation, retrieved_unstored_elevation], axis=0)
         if self.mode == 'w' and len(retrieved_unstored_elevation) > 0:
             store_elevation(elevation=elevation, file_path=self.stored_elevation_path)
+        return X
 
 
 class DropColumns(BaseTransformer):
@@ -284,9 +286,7 @@ def is_str(input: Any) -> bool:
 
     """
     if not isinstance(input, str):
-        if pd.isna(input):
-            logging.debug('%s is not a string, but not number', input)
-        else:
+        if not pd.isna(input):
             logging.warning('%s is not a string', input)
         return False
     return True

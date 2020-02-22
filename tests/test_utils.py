@@ -1,6 +1,7 @@
 import pytest
 from pandas import DataFrame
 
+
 class TestRealEstateData:
 
     def test_directories(self, real_estate_data):
