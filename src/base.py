@@ -1,9 +1,11 @@
+import os
 import logging
 from typing import List
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 import abc
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class BaseTransformer(BaseEstimator, TransformerMixin, metaclass=abc.ABCMeta):
 

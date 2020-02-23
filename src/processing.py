@@ -234,6 +234,19 @@ class ColumnAdder(BaseTransformer):
         return output
 
 
+class ColumnCaster(BaseTransformer):
+
+    def __init__(self, columns: List[str], dtypes: List[str]):
+        self.columns = columns
+        self.dtypes = dtypes
+
+    def transform(self, X):
+        output = X.copy()
+        for col, dtype in zip(self.columns, self.dtypes):
+            output[col] = output[col].astype(dtype)
+        return output
+
+
 class ColumnDivider(BaseTransformer):
 
     def __init__(self, left_columns: List[str], right_columns: List[str], new_columns: List[str]):

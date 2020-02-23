@@ -1,7 +1,6 @@
-from sklearn.pipeline import Pipeline
-from src.base import SlicedPipeline
+import os
+from src.base import BASE_DIR
 from src.processing import *
-from src.utils import RealEstateData, load_stored_elevation
 
 OLD_TO_NEW = {'data_id': 'property_id', 'description': 'desc',
               'district': 'city_district', 'latitude': 'lat',
@@ -31,23 +30,25 @@ LISTING_TYPE_HUN_TO_ENG = {'elado': 'for-sale', 'kiado': 'for-rent'}
 COMPOSITE_ID = ['property_id', 'timestamp']
 TECHNICAL_COLUMNS = ['property_url', 'cluster_id', 'batch_num', 'page_num', 'max_page', 'max_listing', 'is_ad_active']
 
-INPUT_DIR = '../real_estate_hungary/output/'
-DATE = '20181101'
-
-ELEVATION_PATH = './data/ext/elevation.csv'
+ELEVATION_PATH = os.path.join(BASE_DIR, 'data', 'ext', 'elevation.csv')
 ELEVATION_MAP = dict(latitude='latitude', longitude='longitude')
 raw_elevation_map = {k: v for k, v in OLD_TO_NEW.items() if k in ELEVATION_MAP.keys()}
 
-pipeline_steps = [('column_name_standardisation',
-                   ColumnRenamer(old_to_new=OLD_TO_NEW, hun_to_eng=HUN_TO_ENG)),
-                  ('listing_type_translation',
+preprocessing_steps = [('column_name_standardisation',
+                        ColumnRenamer(old_to_new=OLD_TO_NEW, hun_to_eng=HUN_TO_ENG)),
+                       ('listing_type_translation',
                    Translator(column_name='listing_type', hun_eng_map=LISTING_TYPE_HUN_TO_ENG)),
-                  ('to_lower_case', StringStandardizer(func=lambda s: s.str.lower())),
-                  ('property_id_to_number', FunctionApplier(function=lambda x: extract_num(x), columns=['property_id'],
+                       ('to_lower_case', StringStandardizer(func=lambda s: s.str.lower())),
+                       ('property_id_to_number', FunctionApplier(function=lambda x: extract_num(x), columns=['property_id'],
                                                             new_columns=['property_id'])),
-                  ('drop_duplicates',
+                       ('cluster_id_to_number',
+                        FunctionApplier(function=lambda x: extract_num(x), columns=['cluster_id'],
+                                        new_columns=['cluster_id'])),
+                       ('basic_ids_to_int',
+                        ColumnCaster(columns=['property_id', 'cluster_id'], dtypes=['int64', 'int64'])),
+                       ('drop_duplicates',
                    DuplicatesRemoval(are_columns_negated=True, columns=COMPOSITE_ID + TECHNICAL_COLUMNS)),
-                  ('new_records_to_elevation', ElevationInserter(left_longitude=raw_elevation_map['longitude'],
+                       ('new_records_to_elevation', ElevationInserter(left_longitude=raw_elevation_map['longitude'],
                                                                  left_latitude=raw_elevation_map['latitude'],
                                                                  stored_elevation_path=ELEVATION_PATH,
                                                                  stored_elevation_longitude=ELEVATION_MAP[
@@ -55,76 +56,69 @@ pipeline_steps = [('column_name_standardisation',
                                                                  stored_elevation_latitude=ELEVATION_MAP[
                                                                      'latitude'],
                                                                  rounding_decimals=6, mode='w')),
-                  ('merge_elevation',
+                       ('merge_elevation',
                    ElevationMerger(left_longitude=raw_elevation_map['longitude'],
                                    left_latitude=raw_elevation_map['latitude'],
                                    stored_elevation_path=ELEVATION_PATH,
                                    stored_elevation_longitude=ELEVATION_MAP['longitude'],
                                    stored_elevation_latitude=ELEVATION_MAP['latitude'],
                                    rounding_decimals=6)),
-                  ('drop_duplicated_columns',
+                       ('drop_duplicated_columns',
                    DropColumns(columns=[ELEVATION_MAP['longitude'], ELEVATION_MAP['latitude']])),
-                  ('create_id',
+                       ('create_id',
                    IdCreator(columns=COMPOSITE_ID + list(raw_elevation_map.values()), date_format='%Y-%m-%d %H:%M:%S.%f',
                              fallback_date_format='%Y-%m-%d %H:%M:%S',
                              id_column_name='id')),
-                  ('price_to_number', FunctionApplier(
+                       ('price_to_number', FunctionApplier(
                       function=lambda x: extract_num(from_string=x, thousand_eq='ezer', million_eq='millió',
                                                      billion_eq='milliárd'), columns=['price_in_huf'],
                       new_columns=['price_in_huf'])),
-                  ('area_to_number',
+                       ('area_to_number',
                    FunctionApplier(function=lambda x: extract_num(from_string=x), columns=['area_size'],
                                    new_columns=['area_size'])),
-                  ('room_to_lt_12_sqm',
+                       ('room_to_lt_12_sqm',
                    FunctionApplier(function=lambda x: extract_num(x.split('+')[1]) if '+' in x else 0,
                                    columns=['room'], new_columns=['room_lt_12_sqm'])),
-                  ('room_to_ge_12_sqm',
+                       ('room_to_ge_12_sqm',
                    FunctionApplier(function=lambda x: extract_num(x.split('+')[0]), columns=['room'],
                                    new_columns=['room_ge_12_sqm'])),
-                  ('sum_of_rooms',
+                       ('room_total',
                    ColumnAdder(left_columns=['room_ge_12_sqm'], right_columns=['room_lt_12_sqm'],
                                new_columns=['room_total'])),
-                  ('balcony_to_number',
+                       ('rooms_to_int', ColumnCaster(columns=['room_ge_12_sqm', 'room_ge_12_sqm', 'room_total'],
+                                                     dtypes=['int64', 'int64', 'int64'])),
+                       ('balcony_to_number',
                    FunctionApplier(function=lambda x: extract_num(from_string=x), columns=['balcony'],
                                    new_columns=['balcony'])),
-                  ('parking_lot_in_huf',
+                       ('parking_lot_in_huf',
                    ParkingFunctionApplier(function=lambda x: extract_num(x, million_eq='m'), monthly_alias='/hó',
                                           euro_alias='€', monthly_flag=False, euro_flag=False,
                                           column='parking_lot_price', new_column='parking_lot_in_huf')),
-                  ('parking_lot_in_eur',
+                       ('parking_lot_in_eur',
                    ParkingFunctionApplier(function=lambda x: extract_num(x), monthly_alias='/hó',
                                           euro_alias='€', monthly_flag=False, euro_flag=True,
                                           column='parking_lot_price', new_column='parking_lot_in_eur')),
-                  ('parking_lot_in_huf_monthly',
+                       ('parking_lot_in_huf_monthly',
                    ParkingFunctionApplier(function=lambda x: extract_num(x), monthly_alias='/hó',
                                           euro_alias='€', monthly_flag=True, euro_flag=False,
                                           column='parking_lot_price', new_column='parking_lot_in_huf_monthly')),
-                  ('parking_lot_in_eur_monthly',
+                       ('parking_lot_in_eur_monthly',
                    ParkingFunctionApplier(function=lambda x: extract_num(x), monthly_alias='/hó',
                                           euro_alias='€', monthly_flag=True, euro_flag=True,
                                           column='parking_lot_price', new_column='parking_lot_in_eur_monthly')),
-                  ('utilities_to_number',
+                       ('utilities_to_number',
                    FunctionApplier(function=lambda x: extract_num(from_string=x), columns=['utilities'],
                                    new_columns=['utilities'])),
-                  # TODO: Issue with utilities that, people are too lazy to type 25000 instead they type only 25.0
-                  ('mininum_tenancy_to_number',
+                       # TODO: Issue with utilities that, people are too lazy to type 25000 instead they type only 25.0
+                       ('mininum_tenancy_to_number',
                    MinTenancyFunctionApplier(column='min_tenancy', new_column='min_tenancy', year_alias='év',
                                              monthly_alias='hónap', no_alias='nincs')),
-                  # TODO: As a next step, data type of the columns should be checked and if it is not right, fix it
-                  ('add_price_per_sqm', ColumnDivider(left_columns=['price_in_huf'], right_columns=['area_size'],
+                       # TODO: As a next step, data type of the columns should be checked and if it is not right, fix it
+                       ('add_price_per_sqm', ColumnDivider(left_columns=['price_in_huf'], right_columns=['area_size'],
                                                       new_columns=['price_per_sqm'])),
-                  ('drop_original_columns', DropColumns(columns=['room', 'parking_lot_price'])),
-                  ]
+                       ('drop_original_columns', DropColumns(columns=['room', 'parking_lot_price'])),
+                       ]
 
 
 def build_preprocess():
     pass
-
-
-if __name__ == '__main__':
-    real_estate_data = RealEstateData(data_dir=INPUT_DIR, file_name='raw.csv')
-    raw = real_estate_data.read(dir_name='data', date=DATE)
-    elevation_data = load_stored_elevation(ELEVATION_PATH)
-    pipeline = SlicedPipeline(stop_step=None, steps=pipeline_steps)
-    pro = pipeline.transform(raw)
-    print(raw.shape, pro.shape)

@@ -29,7 +29,7 @@ class RealEstateData:
     def directories(self):
         return [_ for _ in os.listdir(self.data_dir) if os.path.isdir(os.path.join(self.data_dir, _))]
 
-    def list_files(self, dir_name):
+    def list_files(self, dir_name: str = ''):
         p = os.path.join(self.data_dir, dir_name)
         return os.listdir(p)
 

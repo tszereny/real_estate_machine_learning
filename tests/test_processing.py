@@ -1,11 +1,9 @@
 import pytest
 import os
 from copy import deepcopy
-from sklearn.pipeline import Pipeline
-import pandas as pd
 from src.base import SlicedPipeline
 from src.processing import *
-from pipeline import pipeline_steps, ELEVATION_PATH, ELEVATION_MAP, OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG, \
+from src.pipelines import preprocessing_steps, ELEVATION_PATH, ELEVATION_MAP, OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG, \
     COMPOSITE_ID, raw_elevation_map
 
 
@@ -77,7 +75,7 @@ class TestElevationTransformers:
         assert res['elevation'].isin([130, 200, 145]).all()
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='merge_elevation')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='merge_elevation')
         preprocessed_data = sp.transform(real_estate_renamed)
         assert not 'elevation' in real_estate_renamed.columns
         em = ElevationMerger(left_longitude=raw_elevation_map['longitude'],
@@ -94,7 +92,7 @@ class TestElevationTransformers:
 class TestFunctionApplier:
 
     def test_property_id_to_number(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='to_lower_case')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='to_lower_case')
         preprocessed_data = sp.transform(real_estate_renamed)
         fa = FunctionApplier(function=lambda x: extract_num(x), columns=['property_id'],
                         new_columns=['property_id_extracted'])
@@ -150,10 +148,18 @@ class TestFunctionApplier:
         assert np.all(far.loc[far['utilities_extracted'].notnull(), 'utilities_extracted'] >= 25), 'Somebody was lazy to type 25000 Huf'
 
 
+class TestColumnCaster:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='drop_duplicates')
+        preprocessed_data = sp.transform(real_estate_renamed)
+        for col in ['property_id', 'cluster_id']:
+            assert preprocessed_data[col].dtype == 'int64'
+
 class TestColumnsAdder:
 
     def test_total_rooms(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='sum_of_rooms')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='room_total')
         assert sp.named_steps['to_lower_case'].column_names == None
         preprocessed_data = sp.transform(real_estate_renamed)
         ca = ColumnAdder(left_columns=['room_ge_12_sqm'], right_columns=['room_lt_12_sqm'], new_columns=['room_total'])
@@ -166,7 +172,7 @@ class TestColumnsAdder:
 class TestIdCreator:
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='create_id')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='create_id')
         preprocessed_data = sp.transform(real_estate_renamed)
         ic = IdCreator(columns=COMPOSITE_ID + list(raw_elevation_map.values()), date_format='%Y-%m-%d %H:%M:%S.%f',
                   fallback_date_format='%Y-%m-%d %H:%M:%S',
@@ -179,7 +185,7 @@ class TestIdCreator:
 class TestParkingFunctionApplier:
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='utilities_to_number')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='utilities_to_number')
         spr = sp.transform(real_estate_renamed)
         assert {'parking_lot_in_huf', 'parking_lot_in_eur', 'parking_lot_in_huf_monthly',
                     'parking_lot_in_eur_monthly'} - set(spr.columns.tolist()) == set()
@@ -194,7 +200,7 @@ class TestParkingFunctionApplier:
 class TestMinTenancyFunctionApplier:
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='add_price_per_sqm')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='add_price_per_sqm')
         spr = sp.transform(real_estate_renamed)
         assert spr['min_tenancy'].dtype == 'float64'
         assert np.all(spr.loc[spr['min_tenancy'].notnull(), 'min_tenancy'] >= 0)
@@ -203,7 +209,7 @@ class TestMinTenancyFunctionApplier:
 class TestColumnDivider:
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='drop_original_columns')
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step='drop_original_columns')
         spr = sp.transform(real_estate_renamed)
         assert 'price_per_sqm' in spr.columns
         assert np.all(spr['price_per_sqm'] >= 0)
@@ -213,7 +219,7 @@ class TestColumnDivider:
 class TestPipeline:
 
     def test_transform(self, real_estate_renamed):
-        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step=None)
+        sp = SlicedPipeline(steps=deepcopy(preprocessing_steps), stop_step=None)
         spr = sp.transform(real_estate_renamed)
         interval_or_ratio = ['lat', 'lng',
                              'elevation', 'price_in_huf', 'price_per_sqm',

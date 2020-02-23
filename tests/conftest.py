@@ -1,10 +1,8 @@
 import pytest
 from src.utils import RealEstateData
-from src.processing import ColumnRenamer, Translator
-from pipeline import OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
+from src.processing import ColumnRenamer
+from src.pipelines import OLD_TO_NEW, HUN_TO_ENG
 import pandas as pd, numpy as np
-import os
-
 
 IS_TEST_SKIPPED = True
 FIXTURE_DIR = 'tests/fixtures/'
