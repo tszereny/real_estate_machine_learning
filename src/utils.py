@@ -10,7 +10,7 @@ from pandas import read_csv
 def load_stored_elevation(file_path: str):
     if os.path.exists(file_path):
         return read_csv(file_path, float_precision='%.6f')
-    logging.warning('file not exist {}, empty Dataframe initialized'.format(file_path))
+    logging.warning('file not exist {}, empty Dataframe initialized for elevation dataset'.format(file_path))
     return pd.DataFrame({'elevation': [], 'longitude': [], 'latitude': []})
 
 

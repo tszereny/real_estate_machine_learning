@@ -63,18 +63,19 @@ class StringStandardizer(BaseTransformer):
 
 class DuplicatesRemoval(BaseTransformer):
 
-    def __init__(self, columns: List[str], is_columns_negated: bool = False):
+    def __init__(self, columns: List[str], are_columns_negated: bool = False):
         self.columns = columns
-        self.is_columns_negated = is_columns_negated
+        self.are_columns_negated = are_columns_negated
 
 
     def get_to_be_modified_columns(self, X):
-        if self.is_columns_negated:
+        if self.are_columns_negated:
             return X.columns[~X.columns.isin(self.columns)].tolist()
         return self.columns
 
     def transform(self, X):
         to_be_modified_columns = self.get_to_be_modified_columns(X)
+        logging.info("Unique record is based on '%s' columns", ', '.join(to_be_modified_columns))
         unique_X = X.drop_duplicates(subset=to_be_modified_columns)
         total_records = len(X)
         duplicated_records = total_records - len(unique_X)
@@ -112,6 +113,8 @@ class ElevationMerger(BaseTransformer):
 
     def transform(self, X: pd.DataFrame):
         X = X.copy()
+        X[[self.left_longitude, self.left_latitude]] = X[[self.left_longitude, self.left_latitude]].round(
+            decimals=self.rounding_decimals)
         return X.merge(how='left', right=self.rounded_stored_elevation, left_on=[self.left_longitude, self.left_latitude],
                        right_on=[self.stored_elevation_longitude, self.stored_elevation_latitude])
 
@@ -147,6 +150,7 @@ class ElevationInserter(ElevationMerger):
         elevation = pd.concat([self.rounded_stored_elevation, retrieved_unstored_elevation], axis=0)
         if self.mode == 'w' and len(retrieved_unstored_elevation) > 0:
             store_elevation(elevation=elevation, file_path=self.stored_elevation_path)
+            logging.info('%s records have been inserted to elevation dataset', len(unstored_elevation))
         return X
 
 
@@ -296,8 +300,6 @@ def is_str(input: Any) -> bool:
 
     """
     if not isinstance(input, str):
-        if not pd.isna(input):
-            logging.warning('%s is not a string', input)
         return False
     return True
 

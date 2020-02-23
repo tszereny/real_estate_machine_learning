@@ -5,7 +5,8 @@ from sklearn.pipeline import Pipeline
 import pandas as pd
 from src.base import SlicedPipeline
 from src.processing import *
-from pipeline import pipeline_steps, OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
+from pipeline import pipeline_steps, ELEVATION_PATH, ELEVATION_MAP, OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG, \
+    COMPOSITE_ID, raw_elevation_map
 
 
 @pytest.mark.parametrize('s, expected', [('4.3 milliárd', 4.3e9), ('33.5 millió', 33.5e6), ('33.5 million', 33.5),
@@ -75,8 +76,31 @@ class TestElevationTransformers:
         assert len(res) == 3
         assert res['elevation'].isin([130, 200, 145]).all()
 
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='merge_elevation')
+        preprocessed_data = sp.transform(real_estate_renamed)
+        assert not 'elevation' in real_estate_renamed.columns
+        em = ElevationMerger(left_longitude=raw_elevation_map['longitude'],
+                        left_latitude=raw_elevation_map['latitude'],
+                        stored_elevation_path=ELEVATION_PATH,
+                        stored_elevation_longitude=ELEVATION_MAP['longitude'],
+                        stored_elevation_latitude=ELEVATION_MAP['latitude'],
+                        rounding_decimals=6)
+        emr = em.transform(preprocessed_data)
+        assert 'elevation' in emr.columns
+        assert emr['elevation'].isnull().sum() == 0
+
 
 class TestFunctionApplier:
+
+    def test_property_id_to_number(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='to_lower_case')
+        preprocessed_data = sp.transform(real_estate_renamed)
+        fa = FunctionApplier(function=lambda x: extract_num(x), columns=['property_id'],
+                        new_columns=['property_id_extracted'])
+        far = fa.transform(preprocessed_data)
+        assert far['property_id_extracted'].dtype in ('float64', 'int64')
+        assert far['property_id_extracted'].isnull().any() == False
 
     def test_price_to_number(self, real_estate_renamed):
         fa = FunctionApplier(function=lambda x: extract_num(from_string=x, thousand_eq='ezer', million_eq='millió',
@@ -127,3 +151,17 @@ class TestColumnsAdder:
         car = ca.transform(preprocessed_data)
         assert car['room_total'].dtype == 'float64'
         assert car['room_total'].isnull().any() == False
+        assert np.all(car['room_total'] > 0)
+
+
+class TestIdCreator:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='create_id')
+        preprocessed_data = sp.transform(real_estate_renamed)
+        ic = IdCreator(columns=COMPOSITE_ID + list(raw_elevation_map.values()), date_format='%Y-%m-%d %H:%M:%S.%f',
+                  fallback_date_format='%Y-%m-%d %H:%M:%S',
+                  id_column_name='id')
+        icr = ic.transform(preprocessed_data)
+        assert icr['id'].dtype == 'float64'
+        assert len(icr['id'].tolist()) == len(icr['id'].unique())
