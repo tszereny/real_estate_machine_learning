@@ -140,6 +140,15 @@ class TestFunctionApplier:
         assert far['balcony_extracted'].dtype == 'float64'
         assert far['balcony_extracted'].isnull().any() == True, 'Balcony contains Nan values'
 
+    def test_utilities_to_number(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(x), columns=['utilities'],
+                        new_columns=['utilities_extracted'])
+        far = fa.transform(real_estate_renamed)
+        assert far['utilities_extracted'].dtype == 'float64'
+        assert far['utilities_extracted'].isnull().any() == True, 'Utilities can contain Nan values'
+        assert np.sum(far.loc[far['utilities_extracted'].notnull(), 'utilities_extracted'] > 1000) > 100
+        assert np.all(far.loc[far['utilities_extracted'].notnull(), 'utilities_extracted'] >= 25), 'Somebody was lazy to type 25000 Huf'
+
 
 class TestColumnsAdder:
 
@@ -165,3 +174,57 @@ class TestIdCreator:
         icr = ic.transform(preprocessed_data)
         assert icr['id'].dtype == 'float64'
         assert len(icr['id'].tolist()) == len(icr['id'].unique())
+
+
+class TestParkingFunctionApplier:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='utilities_to_number')
+        spr = sp.transform(real_estate_renamed)
+        assert {'parking_lot_in_huf', 'parking_lot_in_eur', 'parking_lot_in_huf_monthly',
+                    'parking_lot_in_eur_monthly'} - set(spr.columns.tolist()) == set()
+        assert np.all(spr.loc[spr['parking_lot_in_huf'].notnull(), 'parking_lot_in_huf'] > 1e5)
+        assert np.all(spr.loc[spr['parking_lot_in_huf_monthly'].notnull(), 'parking_lot_in_huf_monthly'] > 1e3)
+        assert spr.loc[spr['parking_lot_price'].str.contains('m').fillna(False),
+                       ['parking_lot_in_huf', 'parking_lot_in_huf_monthly']].notnull().any(axis=1).all()
+        assert spr.loc[spr['parking_lot_price'].str.contains('€').fillna(False),
+                       ['parking_lot_in_eur', 'parking_lot_in_eur_monthly']].notnull().any(axis=1).all()
+
+
+class TestMinTenancyFunctionApplier:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='add_price_per_sqm')
+        spr = sp.transform(real_estate_renamed)
+        assert spr['min_tenancy'].dtype == 'float64'
+        assert np.all(spr.loc[spr['min_tenancy'].notnull(), 'min_tenancy'] >= 0)
+
+
+class TestColumnDivider:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='drop_original_columns')
+        spr = sp.transform(real_estate_renamed)
+        assert 'price_per_sqm' in spr.columns
+        assert np.all(spr['price_per_sqm'] >= 0)
+        assert np.all(spr['price_per_sqm'] == spr['price_in_huf'] / spr['area_size'])
+
+
+class TestPipeline:
+
+    def test_transform(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step=None)
+        spr = sp.transform(real_estate_renamed)
+        interval_or_ratio = ['lat', 'lng',
+                             'elevation', 'price_in_huf', 'price_per_sqm',
+                             'area_size', 'room_total',
+                             'balcony', 'parking_lot_in_huf',
+                             'parking_lot_in_eur', 'parking_lot_in_huf_monthly',
+                             'parking_lot_in_eur_monthly',
+                             'utilities', 'min_tenancy',
+                             'metro_lines_count', 'trams_count',
+                             'trolley_buses_count', 'buses_count',
+                             'boats_count', 'local_railways_count',
+                             'all_night_services_count']
+        for c in interval_or_ratio:
+            assert pd.api.types.is_numeric_dtype(spr[c])

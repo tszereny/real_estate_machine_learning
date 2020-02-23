@@ -234,6 +234,119 @@ class ColumnAdder(BaseTransformer):
         return output
 
 
+class ColumnDivider(BaseTransformer):
+
+    def __init__(self, left_columns: List[str], right_columns: List[str], new_columns: List[str]):
+        self.left_columns = left_columns
+        self.right_columns = right_columns
+        self.new_columns = new_columns
+
+    def transform(self, X):
+        output = X.copy()
+        for left, right, new_col in zip(self.left_columns, self.right_columns, self.new_columns):
+            output[new_col] = output[left] / output[right]
+        return output
+
+
+class ParkingFunctionApplier(BaseTransformer):
+
+    def __init__(self, function: Callable, monthly_alias: str, euro_alias: str, column: str, new_column: str,
+                 euro_flag: bool, monthly_flag: bool):
+        self.function = function
+        self.monthly_alias = monthly_alias
+        self.euro_alias = euro_alias
+        self.column = column
+        self.new_column = new_column
+        self.euro_flag = euro_flag
+        self.monthly_flag = monthly_flag
+
+    def get_monthly_filter(self, X):
+        monthly_flt = X[self.column].str.contains(self.monthly_alias).fillna(False)
+        return monthly_flt
+
+    def get_euro_filter(self, X):
+        eur_flt = X[self.column].str.contains(self.euro_alias).fillna(False)
+        return eur_flt
+
+    def get_not_null_filter(self, X):
+        not_null_flt = X[self.column].notnull()
+        return not_null_flt
+
+    def filtered_apply(self, flt, X):
+        X.loc[flt, self.new_column] = X.loc[flt, self.column].apply(self.function)
+        return X
+
+    def transform(self, X):
+        output = X.copy()
+        not_null_flt, monthly_flt, euro_flt = self.get_not_null_filter(output), self.get_monthly_filter(
+            output), self.get_euro_filter(output)
+        output[self.new_column] = np.nan
+        if self.euro_flag is False and self.monthly_flag is False:
+            logging.info('Parking lot for sale in huf is being populated.')
+            output = self.filtered_apply(flt=not_null_flt & ~euro_flt & ~monthly_flt, X=output)
+        elif self.euro_flag is True and self.monthly_flag is False:
+            logging.info('Parking lot for sale in eur is being populated.')
+            output = self.filtered_apply(flt=not_null_flt & euro_flt & ~monthly_flt, X=output)
+        elif self.euro_flag is False and self.monthly_flag is True:
+            logging.info('Parking lot for rent in huf is being populated.')
+            output = self.filtered_apply(flt=not_null_flt & ~euro_flt & monthly_flt, X=output)
+        elif self.euro_flag is True and self.monthly_flag is True:
+            logging.info('Parking lot for rent in eur is being populated.')
+            output = self.filtered_apply(flt=not_null_flt & euro_flt & monthly_flt, X=output)
+        output[self.new_column] = output[self.new_column].astype('float')
+        return output
+
+
+class MinTenancyFunctionApplier(BaseTransformer):
+
+    def __init__(self, monthly_alias: str, year_alias: str, no_alias: str, column: str, new_column: str):
+        self.monthly_alias = monthly_alias
+        self.year_alias = year_alias
+        self.no_alias = no_alias
+        self.column = column
+        self.new_column = new_column
+
+
+    def get_no_filter(self, X):
+        no_flt = X[self.column].str.contains(self.no_alias).fillna(False)
+        return no_flt
+
+    def get_monthly_filter(self, X):
+        monthly_flt = X[self.column].str.contains(self.monthly_alias).fillna(False)
+        return monthly_flt
+
+    def get_year_filter(self, X):
+        year_flt = X[self.column].str.contains(self.year_alias).fillna(False)
+        return year_flt
+
+    def get_not_null_filter(self, X):
+        not_null_flt = X[self.column].notnull()
+        return not_null_flt
+
+    def filtered_apply(self, flt, X, function):
+        X.loc[flt, self.new_column] = X.loc[flt, self.column].apply(function)
+        return X
+
+    def transform(self, X):
+        output = X.copy()
+        not_null_flt, monthly_flt, year_flt, no_flt = self.get_not_null_filter(output), self.get_monthly_filter(
+            output), self.get_year_filter(output), self.get_no_filter(output)
+        logging.info('No minimum tenancy is being populated.')
+        output = self.filtered_apply(flt=no_flt, X=output, function=lambda x: 0)
+        logging.info('Minimum tenancy > 1 year is being populated.')
+        output = self.filtered_apply(flt=year_flt & monthly_flt, X=output,
+                                     function=lambda s: extract_num(s.split(self.year_alias)[0]) + extract_num(
+                                         s.split(self.year_alias)[1]) / 12)
+        logging.info('Minimum tenancy = 1 year is being populated.')
+        output = self.filtered_apply(flt=year_flt & not_null_flt, X=output,
+                                     function=lambda s: extract_num(s))
+        logging.info('Minimum tenancy < 1 year is being populated.')
+        output = self.filtered_apply(flt=monthly_flt & not_null_flt, X=output,
+                                     function=lambda s: extract_num(s) / 12)
+        output[self.new_column] = output[self.new_column].astype('float')
+        return output
+
+
 def multiply(func, **kwargs):
     def func_wrapper(from_string, thousand_eq=None, million_eq=None, billion_eq=None, thousand_mlpr = 1e3, million_mlpr = 1e6, billion_mlpr = 1e9):
         from_string = str(from_string)
