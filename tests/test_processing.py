@@ -1,23 +1,29 @@
 import pytest
 import os
+from copy import deepcopy
 from sklearn.pipeline import Pipeline
 import pandas as pd
+from src.base import SlicedPipeline
 from src.processing import *
-from pipeline import OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
-from .conftest import IS_TEST_SKIPPED
+from pipeline import pipeline_steps, OLD_TO_NEW, HUN_TO_ENG, LISTING_TYPE_HUN_TO_ENG
 
+
+@pytest.mark.parametrize('s, expected', [('4.3 milliárd', 4.3e9), ('33.5 millió', 33.5e6), ('33.5 million', 33.5),
+                                         ('180 ezer', 180e3), ('150 000', 150000), (None, None), (np.nan, np.nan)])
+def test_extract_num(s, expected):
+    assert extract_num(from_string=s, thousand_eq='ezer', million_eq='millió',
+                       billion_eq='milliárd') == expected or np.isnan(s)
 
 class TestStringStandardizer:
 
     def fill_with_none(self, s):
         return s.apply(lambda x: None)
 
-    def test_transform(self, real_estate_raw):
-        df = real_estate_raw(0)
-        assert isinstance(df, pd.DataFrame)
+    def test_transform(self, real_estate_renamed):
+        assert isinstance(real_estate_renamed, pd.DataFrame)
         ss = StringStandardizer(func=lambda s: self.fill_with_none(s))
-        assert isinstance(ss.get_string_columns(df), list)
-        result = ss.transform(df)
+        assert isinstance(ss.get_string_columns(real_estate_renamed), list)
+        result = ss.transform(real_estate_renamed)
         assert isinstance(result, pd.DataFrame)
         assert result[ss.column_names].isnull().all().all() == True
 
@@ -68,3 +74,56 @@ class TestElevationTransformers:
         res = em.transform(sample_gps_data[-3:])
         assert len(res) == 3
         assert res['elevation'].isin([130, 200, 145]).all()
+
+
+class TestFunctionApplier:
+
+    def test_price_to_number(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(from_string=x, thousand_eq='ezer', million_eq='millió',
+                                                       billion_eq='milliárd'), columns=['price_in_huf'],
+                        new_columns=['price_in_huf_extracted'])
+        far = fa.transform(real_estate_renamed)
+        assert far['price_in_huf_extracted'].dtype == 'float64'
+        assert far['price_in_huf_extracted'].isnull().any() == False
+        assert far['price_in_huf_extracted'].min() / 1e6 <= 1
+        assert far['price_in_huf_extracted'].max() / 1e11 <= 1
+
+    def test_area_to_number(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(from_string=x), columns=['area_size'],
+                        new_columns=['area_size_extracted'])
+        far = fa.transform(real_estate_renamed)
+        assert far['area_size_extracted'].dtype == 'float64'
+        assert far['area_size_extracted'].isnull().any() == False
+
+    def test_room_to_lt_12_sqm(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(x.split('+')[1]) if '+' in x else 0, columns=['room'],
+                        new_columns=['room_lt_12_sqm'])
+        far = fa.transform(real_estate_renamed)
+        assert far['room_lt_12_sqm'].dtype == 'float64'
+        assert far['room_lt_12_sqm'].isnull().any() == False
+
+    def test_room_to_ge_12_sqm(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(x.split('+')[0]), columns=['room'],
+                        new_columns=['room_ge_12_sqm'])
+        far = fa.transform(real_estate_renamed)
+        assert far['room_ge_12_sqm'].dtype == 'float64'
+        assert far['room_ge_12_sqm'].isnull().any() == False
+
+    def test_balcony_to_number(self, real_estate_renamed):
+        fa = FunctionApplier(function=lambda x: extract_num(x), columns=['balcony'],
+                        new_columns=['balcony_extracted'])
+        far = fa.transform(real_estate_renamed)
+        assert far['balcony_extracted'].dtype == 'float64'
+        assert far['balcony_extracted'].isnull().any() == True, 'Balcony contains Nan values'
+
+
+class TestColumnsAdder:
+
+    def test_total_rooms(self, real_estate_renamed):
+        sp = SlicedPipeline(steps=deepcopy(pipeline_steps), stop_step='sum_of_rooms')
+        assert sp.named_steps['to_lower_case'].column_names == None
+        preprocessed_data = sp.transform(real_estate_renamed)
+        ca = ColumnAdder(left_columns=['room_ge_12_sqm'], right_columns=['room_lt_12_sqm'], new_columns=['room_total'])
+        car = ca.transform(preprocessed_data)
+        assert car['room_total'].dtype == 'float64'
+        assert car['room_total'].isnull().any() == False

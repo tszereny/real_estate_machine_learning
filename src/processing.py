@@ -57,6 +57,7 @@ class StringStandardizer(BaseTransformer):
         X = X.copy()
         self.column_names = self.get_string_columns(X)
         X[self.column_names] = X[self.column_names].apply(self.func)
+        # self.column_names = None
         return X
 
 
@@ -167,9 +168,11 @@ class DropColumns(BaseTransformer):
 
 class IdCreator(BaseTransformer):
 
-    def __init__(self, columns: List[str], date_format: str = '%Y-%m-%d %H:%M:%S.%f', id_column_name: str = 'id'):
+    def __init__(self, columns: List[str], date_format: str = '%Y-%m-%d %H:%M:%S.%f', fallback_date_format: str = None,
+                 id_column_name: str = 'id'):
         self.columns = columns
         self.date_format = date_format
+        self.fallback_date_format = fallback_date_format
         self.id_column_name = id_column_name
 
     def get_numeric_columns(self, X):
@@ -185,8 +188,15 @@ class IdCreator(BaseTransformer):
         for c in numeric_columns:
             X[self.id_column_name] = X[self.id_column_name] + X[c]
         for c in str_columns:
-            X[self.id_column_name] = X[self.id_column_name] + X[c].apply(
-                lambda ts: datetime.strptime(ts, self.date_format).timestamp())
+            try:
+                X[self.id_column_name] = X[self.id_column_name] + X[c].apply(
+                    lambda ts: datetime.strptime(ts, self.date_format).timestamp())
+            except ValueError as err:
+                if self.fallback_date_format is not None:
+                    X[self.id_column_name] = X[self.id_column_name] + X[c].apply(
+                        lambda ts: datetime.strptime(ts, self.fallback_date_format).timestamp())
+                else:
+                    raise err
         return X
 
 
